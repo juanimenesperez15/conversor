@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Conversor de video para Meta Ads</title>
+<style>
+  :root {
+    --bg: #0f1117; --card: #161922; --border: #2a2f3a;
+    --brand: #D6A461; --text: #e7ecf3; --muted: #93a0b5;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg); color: var(--text); padding: 28px 18px;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 2px; }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 20px; line-height: 1.5; }
+  .drop {
+    border: 2px dashed var(--border); border-radius: 14px; padding: 36px;
+    text-align: center; cursor: pointer; transition: all .15s; color: var(--muted);
+  }
+  .drop.over { border-color: var(--brand); background: rgba(214,164,97,.06); }
+  .drop strong { color: var(--text); word-break: break-all; }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px; margin-top: 16px; font-size: 13px; line-height: 1.5;
+  }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 16px; }
+  .k { color: var(--muted); }
+  .ok { color: #34d399; } .warn { color: #fbbf24; }
+  ul { margin: 6px 0 0; padding-left: 18px; }
+  label.section { display:block; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 20px 0 8px; }
+  .presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .opt {
+    border: 1px solid var(--border); background: transparent; color: var(--text);
+    border-radius: 10px; padding: 10px; font-size: 13px; text-align: left; cursor: pointer;
+  }
+  .opt small { display:block; color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .opt.sel { border-color: var(--brand); background: rgba(214,164,97,.12); }
+  .row { display: flex; gap: 8px; }
+  .btn {
+    width: 100%; border: none; border-radius: 10px; padding: 13px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    background: var(--brand); color: #0f1117; margin-top: 20px;
+  }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .bar { height: 8px; border-radius: 6px; background: var(--border); overflow: hidden; margin-top: 14px; display:none; }
+  .bar > div { height: 100%; width: 0%; background: var(--brand); transition: width .2s; }
+  .msg { font-size: 13px; margin-top: 10px; min-height: 18px; line-height: 1.5; }
+  .hidden { display: none; }
+  a { color: var(--brand); }
+  .foot { color: var(--muted); font-size: 11px; margin-top: 22px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Conversor de video para Meta Ads</h1>
+  <p class="sub">Deja cualquier video listo para subir como anuncio en Facebook / Instagram (MP4, H.264, yuv420p, AAC).<br>
+  Todo se procesa <strong>en tu propia compu</strong>; el video no se sube a ningún servidor.</p>
+
+  <div id="drop" class="drop"><div id="dropText">Arrastrá un video acá o hacé clic para elegirlo</div></div>
+  <input id="file" type="file" accept="video/*" class="hidden" />
+
+  <div id="analysis" class="card hidden"></div>
+
+  <div id="options" class="hidden">
+    <label class="section">Formato de salida</label>
+    <div id="presets" class="presets">
+      <button class="opt" data-preset="original">Original<small>sólo corrige formato</small></button>
+      <button class="opt sel" data-preset="reels">Reels / Historias<small>9:16</small></button>
+      <button class="opt" data-preset="feed_vertical">Feed vertical<small>4:5</small></button>
+      <button class="opt" data-preset="square">Cuadrado<small>1:1</small></button>
+      <button class="opt" data-preset="landscape">Horizontal<small>16:9</small></button>
+    </div>
+
+    <div id="bgWrap">
+      <label class="section">Relleno (si el aspecto no coincide)</label>
+      <div class="row">
+        <button class="opt sel" data-bg="blur" style="flex:1; text-align:center">Fondo difuminado</button>
+        <button class="opt" data-bg="black" style="flex:1; text-align:center">Barras negras</button>
+      </div>
+    </div>
+
+    <button id="go" class="btn">Convertir y descargar</button>
+    <div class="bar" id="bar"><div id="barFill"></div></div>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <p class="foot">
+    Funciona mejor con videos cortos (anuncios de hasta ~2-3 min). La conversión en el
+    navegador es más lenta que un programa nativo. La primera vez necesita conexión a
+    internet para cargar el motor de conversión.
+  </p>
+</div>
+
+<!-- Motor de conversión: ffmpeg compilado a WebAssembly (corre en el navegador) -->
+<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js"></script>
+<script src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+
+const PRESETS = {
+  original:      { w: null, h: null, aspect: 'original' },
+  reels:         { w: 1080, h: 1920, aspect: '9-16' },
+  feed_vertical: { w: 1080, h: 1350, aspect: '4-5' },
+  square:        { w: 1080, h: 1080, aspect: '1-1' },
+  landscape:     { w: 1920, h: 1080, aspect: '16-9' },
+};
+
+let state = { file: null, preset: 'reels', background: 'blur', converting: false };
+let ffmpeg = null;
+
+// ─── Descarga con progreso visible (devuelve una URL blob local) ─────────────
+async function fetchBlobURL(url, type, label, onMsg) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('No se pudo descargar ' + label + ' (' + res.status + ')');
+  const total = Number(res.headers.get('content-length')) || 0;
+  const reader = res.body.getReader();
+  const chunks = []; let received = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value); received += value.length;
+    const mb = (received / 1048576).toFixed(1);
+    onMsg && onMsg(total
+      ? 'Descargando motor (' + label + '): ' + Math.round((received / total) * 100) + '% · ' + mb + ' MB'
+      : 'Descargando motor (' + label + '): ' + mb + ' MB');
+  }
+  return URL.createObjectURL(new Blob(chunks, { type }));
+}
+
+// ─── Carga perezosa del motor ffmpeg.wasm ────────────────────────────────────
+async function getFfmpeg(onMsg) {
+  if (ffmpeg) return ffmpeg;
+  const { FFmpeg } = FFmpegWASM;
+  ffmpeg = new FFmpeg();
+  const base = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+  const workerURL = 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/814.ffmpeg.js';
+  // Descargamos cada parte como blob local (necesario para que funcione desde
+  // file://) y mostramos el avance. El .wasm es el grande (~30 MB).
+  const classWorkerURL = await fetchBlobURL(workerURL, 'text/javascript', 'worker', onMsg);
+  const coreURL = await fetchBlobURL(base + '/ffmpeg-core.js', 'text/javascript', 'core', onMsg);
+  const wasmURL = await fetchBlobURL(base + '/ffmpeg-core.wasm', 'application/wasm', 'wasm', onMsg);
+  onMsg && onMsg('Iniciando motor…');
+  await ffmpeg.load({ classWorkerURL, coreURL, wasmURL });
+  return ffmpeg;
+}
+
+// ─── Análisis básico con un <video> (sin tocar ffmpeg) ───────────────────────
+function probe(file) {
+  return new Promise((resolve) => {
+    const v = document.createElement('video');
+    v.preload = 'metadata';
+    v.onloadedmetadata = () => {
+      resolve({ width: v.videoWidth, height: v.videoHeight, durationSec: v.duration });
+      URL.revokeObjectURL(v.src);
+    };
+    v.onerror = () => resolve(null);
+    v.src = URL.createObjectURL(file);
+  });
+}
+
+async function setFile(file) {
+  if (!file) return;
+  if (!file.type.startsWith('video/')) { alert('El archivo tiene que ser un video.'); return; }
+  state.file = file;
+  $('dropText').innerHTML = '<strong>' + file.name + '</strong>';
+  $('options').classList.remove('hidden');
+  $('msg').textContent = ''; $('bar').style.display = 'none'; $('barFill').style.width = '0%';
+
+  const a = $('analysis'); a.classList.remove('hidden'); a.innerHTML = 'Leyendo video…';
+  const info = await probe(file);
+  const mb = (file.size / (1024 * 1024)).toFixed(1);
+  if (!info) { a.innerHTML = 'No se pudieron leer los datos, pero igual podés convertirlo.'; return; }
+  const odd = info.width % 2 !== 0 || info.height % 2 !== 0;
+  a.innerHTML =
+    '<div class="grid">' +
+      '<div><span class="k">Resolución:</span> ' + info.width + '×' + info.height + '</div>' +
+      '<div><span class="k">Duración:</span> ' + Math.round(info.durationSec) + ' s</div>' +
+      '<div><span class="k">Tamaño:</span> ' + mb + ' MB</div>' +
+    '</div>' +
+    '<div style="margin-top:8px" class="' + (odd ? 'warn' : 'ok') + '">' +
+    (odd ? '⚠ Dimensiones impares: las corregimos al convertir.' :
+           'Al convertir queda en H.264 / yuv420p / AAC — el formato que Meta acepta.') + '</div>';
+}
+
+// ─── Botones de preset y de fondo ────────────────────────────────────────────
+document.querySelectorAll('[data-preset]').forEach((b) => {
+  b.onclick = () => {
+    state.preset = b.dataset.preset;
+    document.querySelectorAll('[data-preset]').forEach((x) => x.classList.toggle('sel', x === b));
+    $('bgWrap').style.display = b.dataset.preset === 'original' ? 'none' : '';
+  };
+});
+document.querySelectorAll('[data-bg]').forEach((b) => {
+  b.onclick = () => {
+    state.background = b.dataset.bg;
+    document.querySelectorAll('[data-bg]').forEach((x) => x.classList.toggle('sel', x === b));
+  };
+});
+
+// ─── Dropzone / selección ─────────────────────────────────────────────────────
+const drop = $('drop');
+drop.onclick = () => { if (!state.converting) $('file').click(); };
+$('file').onchange = (e) => setFile(e.target.files[0]);
+drop.ondragover = (e) => { e.preventDefault(); drop.classList.add('over'); };
+drop.ondragleave = () => drop.classList.remove('over');
+drop.ondrop = (e) => { e.preventDefault(); drop.classList.remove('over'); setFile(e.dataTransfer.files[0]); };
+
+// ─── Armar argumentos de ffmpeg ──────────────────────────────────────────────
+function buildArgs(preset, background) {
+  const p = PRESETS[preset];
+  const enc = [
+    '-c:v', 'libx264', '-profile:v', 'high', '-pix_fmt', 'yuv420p',
+    '-preset', 'veryfast', '-crf', '23',
+    '-c:a', 'aac', '-b:a', '128k', '-ar', '48000', '-ac', '2',
+    '-movflags', '+faststart',
+  ];
+  let filter;
+  if (p.w && p.h) {
+    if (background === 'black') {
+      filter = ['-vf',
+        'scale=' + p.w + ':' + p.h + ':force_original_aspect_ratio=decrease,' +
+        'pad=' + p.w + ':' + p.h + ':(ow-iw)/2:(oh-ih)/2:color=black,setsar=1'];
+    } else {
+      filter = ['-filter_complex',
+        '[0:v]scale=' + p.w + ':' + p.h + ':force_original_aspect_ratio=increase,crop=' + p.w + ':' + p.h + ',boxblur=20:1[bg];' +
+        '[0:v]scale=' + p.w + ':' + p.h + ':force_original_aspect_ratio=decrease[fg];' +
+        '[bg][fg]overlay=(W-w)/2:(H-h)/2,setsar=1'];
+    }
+  } else {
+    filter = ['-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2,setsar=1'];
+  }
+  return ['-i', 'input', ...filter, ...enc, 'output.mp4'];
+}
+
+// ─── Convertir ──────────────────────────────────────────────────────────────
+$('go').onclick = async () => {
+  if (!state.file || state.converting) return;
+  state.converting = true;
+  $('go').disabled = true; $('go').textContent = 'Convirtiendo…';
+  $('bar').style.display = 'block'; $('barFill').style.width = '0%';
+  const setMsg = (t) => $('msg').textContent = t;
+
+  try {
+    const { fetchFile } = FFmpegUtil;
+    const ff = await getFfmpeg(setMsg);
+    ff.on('progress', ({ progress }) => {
+      const pct = Math.max(0, Math.min(100, Math.round((progress || 0) * 100)));
+      $('barFill').style.width = pct + '%';
+      setMsg('Convirtiendo… ' + pct + '%');
+    });
+
+    setMsg('Preparando…');
+    await ff.writeFile('input', await fetchFile(state.file));
+    setMsg('Convirtiendo…');
+    await ff.exec(buildArgs(state.preset, state.background));
+
+    const data = await ff.readFile('output.mp4');
+    const blob = new Blob([data.buffer], { type: 'video/mp4' });
+    const url = URL.createObjectURL(blob);
+    const base = state.file.name.replace(/\.[^.]+$/, '');
+    const a = document.createElement('a');
+    a.href = url; a.download = base + '-meta-' + PRESETS[state.preset].aspect + '.mp4';
+    a.click(); URL.revokeObjectURL(url);
+
+    $('barFill').style.width = '100%';
+    setMsg('✔ Listo. Se descargó el video convertido, listo para subir a Meta.');
+  } catch (err) {
+    $('bar').style.display = 'none';
+    setMsg('Error: ' + (err && err.message ? err.message : err));
+  } finally {
+    state.converting = false;
+    $('go').disabled = false; $('go').textContent = 'Convertir y descargar';
+  }
+};
+</script>
+</body>
+</html>
