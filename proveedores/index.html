@@ -4,354 +4,340 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Proveedores" />
-<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
-<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+<meta name="theme-color" content="#000000" />
+<meta name="color-scheme" content="dark" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icon-180.png" />
+<link rel="icon" type="image/png" href="icon-180.png" />
 <title>Proveedores in-cosmetics</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cabin:wght@500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
-  /* Paleta in-cosmetics (tomada de in-cosmetics.com): cambiar acá para ajustar la marca */
+  /* Paleta in-cosmetics (in-cosmetics.com), siempre en modo oscuro */
   :root {
+    color-scheme: dark;
     --brand: #784A98;
-    --brand-ink: #5E3A77;
-    --brand-tint: #F2EDF5;
-    --brand-soft: #D9C9E5;
-    --bg: #FFFFFF;
-    --surface: #F5F5F7;
-    --surface-2: #E8E8ED;
-    --line: #D2D2D7;
-    --ink: #2D2D2D;
-    --ink-2: #6E6E73;
-    --ink-3: #A1A1A6;
-    --glass: rgba(255,255,255,.78);
-    --shadow-lg: 0 30px 80px rgba(0,0,0,.18);
-    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Open Sans", "Helvetica Neue", Arial, sans-serif;
-    --display: "Cabin", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --brand: #A180B7;
-      --brand-ink: #D9C9E5;
-      --brand-tint: rgba(120,74,152,.24);
-      --brand-soft: #5E3A77;
-      --bg: #000000;
-      --surface: #1C1C1E;
-      --surface-2: #2C2C2E;
-      --line: #3A3A3C;
-      --ink: #F5F5F7;
-      --ink-2: #A1A1A6;
-      --ink-3: #6E6E73;
-      --glass: rgba(0,0,0,.72);
-      --shadow-lg: 0 30px 80px rgba(0,0,0,.7);
-    }
+    --brand-hi: #9A6BBF;
+    --brand-text: #D4BCE8;
+    --bg: #000;
+    --ink: #FFFFFF;
+    --ink-2: rgba(235,235,245,.62);
+    --ink-3: rgba(235,235,245,.34);
+    --line: rgba(255,255,255,.12);
+    --field: rgba(255,255,255,.07);
+    --danger: #FF453A;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", "Segoe UI", Roboto, Arial, sans-serif;
+    --ease: cubic-bezier(.2,.9,.25,1);
   }
 
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html { -webkit-text-size-adjust: 100%; }
+  html { -webkit-text-size-adjust: 100%; background: var(--bg); }
   body {
-    margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink);
-    font-family: var(--font); font-size: 17px; line-height: 1.4; letter-spacing: -.012em;
-    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    margin: 0; min-height: 100vh; min-height: 100dvh; background: var(--bg); color: var(--ink);
+    font-family: var(--font); font-size: 17px; line-height: 1.35; letter-spacing: -.012em;
+    -webkit-font-smoothing: antialiased; -webkit-user-select: none; user-select: none;
   }
+  input, textarea { -webkit-user-select: text; user-select: text; }
   button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit; }
   button { cursor: pointer; }
-  img { display: block; }
+  img { display: block; -webkit-user-drag: none; }
   .hidden { display: none !important; }
 
-  /* ---------- Barra ---------- */
-  .nav {
-    position: sticky; top: 0; z-index: 20;
-    padding: env(safe-area-inset-top) 20px 0;
-    background: var(--glass);
-    backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
-    border-bottom: .5px solid transparent; transition: border-color .2s;
+  /* Luz ambiente violeta detrás del vidrio */
+  .ambient { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+  .ambient::before, .ambient::after {
+    content: ""; position: absolute; border-radius: 50%; filter: blur(80px);
   }
-  .nav.scrolled { border-bottom-color: var(--line); }
-  .nav-inner { max-width: 1120px; margin: 0 auto; height: 52px; display: flex; align-items: center; justify-content: space-between; }
-  .wordmark { font-family: var(--display); font-size: 20px; font-weight: 600; letter-spacing: -.01em; color: var(--brand); }
-  .wordmark span { font-family: var(--font); font-size: 13px; font-weight: 500; color: var(--ink-2); margin-left: 8px; letter-spacing: 0; }
-  .nav-title { font-size: 15px; font-weight: 600; opacity: 0; transition: opacity .2s; position: absolute; left: 50%; transform: translateX(-50%); }
-  .nav.scrolled .nav-title { opacity: 1; }
-  .ghost {
-    border: none; background: none; color: var(--ink-2); width: 36px; height: 36px; border-radius: 50%;
-    display: grid; place-items: center;
-  }
-  .ghost:hover { background: var(--surface); }
-  .ghost svg { width: 20px; height: 20px; }
+  .ambient::before { width: 70vmax; height: 70vmax; left: -25vmax; top: -30vmax; background: radial-gradient(circle, rgba(120,74,152,.55), transparent 65%); }
+  .ambient::after { width: 60vmax; height: 60vmax; right: -25vmax; bottom: -25vmax; background: radial-gradient(circle, rgba(74,44,97,.6), transparent 65%); }
 
-  main { max-width: 1120px; margin: 0 auto; padding: 28px 20px calc(env(safe-area-inset-bottom) + 120px); }
-  .hero h1 { font-family: var(--display); font-size: clamp(40px, 7vw, 64px); font-weight: 700; letter-spacing: -.025em; line-height: 1.02; margin: 0; }
-  .hero h1 span { color: var(--brand); }
-  .hero p { color: var(--ink-2); font-size: clamp(17px, 2.2vw, 21px); margin: 10px 0 0; letter-spacing: -.015em; }
+  /* ---------- Material Liquid Glass ---------- */
+  .glass {
+    position: relative;
+    background: linear-gradient(145deg, rgba(255,255,255,.16), rgba(255,255,255,.05) 45%, rgba(255,255,255,.08));
+    -webkit-backdrop-filter: blur(24px) saturate(190%); backdrop-filter: blur(24px) saturate(190%);
+    border: .5px solid rgba(255,255,255,.22);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.32),
+      inset 0 -1px 1px rgba(255,255,255,.06),
+      inset 0 0 18px rgba(255,255,255,.04),
+      0 10px 30px rgba(0,0,0,.45);
+  }
+  .glass.tint {
+    background: linear-gradient(145deg, rgba(170,120,210,.75), rgba(120,74,152,.62) 50%, rgba(90,52,120,.7));
+    border-color: rgba(220,190,245,.4);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 -1px 1px rgba(255,255,255,.1), 0 10px 30px rgba(120,74,152,.45);
+  }
+  .press { transition: transform .35s var(--ease), filter .2s; }
+  .press:active { transform: scale(.93); filter: brightness(1.25); }
 
-  .search {
-    display: flex; align-items: center; gap: 10px; background: var(--surface);
-    border-radius: 14px; padding: 0 14px; height: 48px; margin-top: 28px;
+  /* ---------- Barra superior con borde difuminado ---------- */
+  .top {
+    position: sticky; top: 0; z-index: 20; padding: calc(env(safe-area-inset-top) + 10px) 20px 14px;
   }
-  .search svg { width: 18px; height: 18px; color: var(--ink-2); flex: none; }
-  .search input { border: none; background: none; outline: none; flex: 1; min-width: 0; font-size: 17px; }
-  .search input::placeholder { color: var(--ink-3); }
+  .top::before {
+    content: ""; position: absolute; inset: 0 0 -24px; z-index: -1; opacity: 0; transition: opacity .3s;
+    background: linear-gradient(to bottom, rgba(0,0,0,.75), rgba(0,0,0,.35) 70%, transparent);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent); mask-image: linear-gradient(to bottom, #000 55%, transparent);
+  }
+  .top.scrolled::before { opacity: 1; }
+  .top-inner { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .logo { height: 22px; width: auto; transition: opacity .2s; }
+  .top-title { position: absolute; left: 50%; transform: translate(-50%, 6px); font-size: 17px; font-weight: 600; opacity: 0; transition: all .3s var(--ease); pointer-events: none; }
+  .top.scrolled .top-title { opacity: 1; transform: translate(-50%, 0); }
+  .top.scrolled .logo { opacity: 0; }
+  .circle {
+    width: 44px; height: 44px; border-radius: 50%; border: none; display: grid; place-items: center; color: var(--ink); flex: none;
+  }
+  .circle svg { width: 20px; height: 20px; }
 
-  .filters { display: flex; gap: 8px; overflow-x: auto; padding: 16px 20px 2px; margin: 0 -20px; scrollbar-width: none; }
-  .filters::-webkit-scrollbar { display: none; }
-  .pill {
-    border: 1px solid var(--line); background: var(--bg); padding: 7px 15px; border-radius: 999px;
-    font-size: 14px; font-weight: 500; white-space: nowrap; color: var(--ink); transition: all .15s;
-  }
-  .pill:hover { border-color: var(--ink-3); }
-  .pill.on { background: var(--brand); border-color: var(--brand); color: #fff; }
+  main { max-width: 1120px; margin: 0 auto; padding: 4px 20px calc(env(safe-area-inset-bottom) + 120px); }
+  .large { font-size: 34px; font-weight: 700; letter-spacing: -.03em; margin: 8px 0 2px; line-height: 1.1; }
+  .sub { color: var(--ink-2); font-size: 15px; margin: 0; }
 
-  /* ---------- Galería de proveedores ---------- */
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr)); gap: 36px 22px; margin-top: 32px; }
-  .card { border: none; background: none; padding: 0; text-align: left; width: 100%; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; align-self: start; }
-  .card-img {
-    aspect-ratio: 4 / 5; border-radius: 20px; overflow: hidden; background: var(--surface); position: relative;
-    transition: transform .45s cubic-bezier(.2,.8,.2,1), box-shadow .45s;
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding: 18px 20px 6px; margin: 0 -20px; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { border: none; height: 36px; padding: 0 16px; border-radius: 999px; font-size: 15px; font-weight: 500; white-space: nowrap; color: var(--ink); flex: none; }
+
+  /* ---------- Tarjetas ---------- */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); gap: 14px; margin-top: 18px; }
+  @media (max-width: 560px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } }
+  .card {
+    position: relative; border: none; padding: 0; aspect-ratio: 3 / 4; border-radius: 28px; overflow: hidden; text-align: left;
+    background: #111; min-width: 0; box-shadow: 0 0 0 .5px rgba(255,255,255,.1), 0 12px 32px rgba(0,0,0,.5);
+    transition: transform .4s var(--ease);
   }
-  .card:hover .card-img { transform: scale(1.015); box-shadow: 0 20px 50px rgba(0,0,0,.12); }
-  .card:active .card-img { transform: scale(.98); }
-  .card-img img { width: 100%; height: 100%; object-fit: cover; }
-  .card-img .n {
-    position: absolute; right: 10px; bottom: 10px; font-size: 12px; font-weight: 600; color: #fff;
-    background: rgba(0,0,0,.42); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    padding: 4px 9px; border-radius: 999px; display: flex; align-items: center; gap: 4px;
-  }
-  .card-img .n svg { width: 12px; height: 12px; }
+  .card:active { transform: scale(.965); }
+  .card > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .card .initials { position: absolute; inset: 0; }
   .initials {
-    width: 100%; height: 100%; display: grid; place-items: center;
-    background: linear-gradient(160deg, var(--brand-tint), var(--surface) 70%);
-    color: var(--brand-ink); font-size: 44px; font-weight: 600; letter-spacing: -.03em;
+    display: grid; place-items: center; color: rgba(255,255,255,.9); font-size: 46px; font-weight: 700; letter-spacing: -.03em;
+    background: radial-gradient(circle at 30% 20%, rgba(255,255,255,.22), transparent 55%), linear-gradient(160deg, #9A6BBF, #784A98 50%, #3E2452);
   }
-  .card h3 { font-family: var(--display); font-size: 19px; font-weight: 600; letter-spacing: -.02em; margin: 14px 2px 3px; }
-  .card p { font-size: 14px; color: var(--ink-2); margin: 0 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .card p.none { color: var(--ink-3); }
-  .card .country { color: var(--ink); font-weight: 500; margin-bottom: 2px; }
-  .d-country { font-size: 19px; color: var(--ink); margin: 8px 0 0; font-weight: 500; }
+  .card .info {
+    position: absolute; left: 8px; right: 8px; bottom: 8px; border-radius: 21px; padding: 11px 13px 12px;
+    background: linear-gradient(145deg, rgba(40,40,44,.42), rgba(20,20,24,.3));
+  }
+  .card h3 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -.02em; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card .meta { margin: 3px 0 0; font-size: 12.5px; color: rgba(255,255,255,.78); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card .meta.dim { color: rgba(255,255,255,.5); }
+  .count {
+    position: absolute; top: 10px; right: 10px; height: 28px; padding: 0 10px; border-radius: 999px;
+    display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600;
+  }
+  .count svg { width: 13px; height: 13px; }
 
-  .empty { text-align: center; padding: 72px 20px 20px; }
-  .empty-art {
-    width: 96px; height: 96px; border-radius: 28px; margin: 0 auto 22px; display: grid; place-items: center;
-    background: var(--brand-tint); color: var(--brand-ink);
-  }
-  .empty-art svg { width: 44px; height: 44px; }
-  .empty h2 { font-family: var(--display); font-size: 28px; letter-spacing: -.03em; margin: 0 0 8px; }
-  .empty p { color: var(--ink-2); margin: 0 auto; max-width: 360px; }
+  .empty { text-align: center; padding: 70px 24px 20px; }
+  .empty-icon { width: 92px; height: 92px; border-radius: 28px; margin: 0 auto 22px; display: grid; place-items: center; }
+  .empty-icon svg { width: 42px; height: 42px; }
+  .empty h2 { font-size: 24px; letter-spacing: -.02em; margin: 0 0 8px; }
+  .empty p { color: var(--ink-2); margin: 0 auto; max-width: 320px; font-size: 16px; }
 
-  /* ---------- Botón flotante ---------- */
-  .fab {
-    position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 22px); transform: translateX(-50%); z-index: 30;
-    border: none; background: var(--brand); color: #fff; height: 54px; padding: 0 26px 0 20px; border-radius: 999px;
-    font-size: 17px; font-weight: 600; display: flex; align-items: center; gap: 8px; white-space: nowrap;
-    box-shadow: 0 10px 30px rgba(120,74,152,.4); transition: transform .2s;
+  /* ---------- Barra inferior flotante (estilo iOS 26) ---------- */
+  .dock {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; pointer-events: none;
+    padding: 0 16px calc(env(safe-area-inset-bottom) + 10px);
   }
-  .fab:active { transform: translateX(-50%) scale(.96); }
-  .fab svg { width: 20px; height: 20px; }
-
-  .btn {
-    border: none; border-radius: 999px; padding: 13px 24px; font-size: 17px; font-weight: 600;
-    background: var(--brand); color: #fff; display: inline-flex; align-items: center; gap: 6px;
+  .dock::before {
+    content: ""; position: absolute; inset: -30px 0 0; z-index: -1;
+    background: linear-gradient(to top, rgba(0,0,0,.7), transparent);
   }
-  .btn:active { opacity: .8; }
-  .btn.danger { background: none; color: #FF3B30; width: 100%; justify-content: center; }
+  .dock-inner { max-width: 640px; margin: 0 auto; display: flex; gap: 10px; align-items: center; pointer-events: auto; }
+  @media (min-width: 900px) { .dock { padding-bottom: 20px; } }
+  .search { flex: 1; height: 52px; border-radius: 999px; display: flex; align-items: center; gap: 9px; padding: 0 18px; min-width: 0; }
+  .search svg { width: 18px; height: 18px; color: var(--ink-2); flex: none; }
+  .search input { flex: 1; min-width: 0; border: none; background: none; outline: none; font-size: 17px; }
+  .search input::placeholder { color: var(--ink-2); }
+  .add { width: 52px; height: 52px; }
+  .add svg { width: 24px; height: 24px; }
 
   /* ---------- Hojas ---------- */
   dialog {
-    border: none; padding: 0; background: var(--bg); color: var(--ink);
-    width: 100%; max-width: 600px; height: 100%; max-height: 100%;
-    margin: 0 auto; border-radius: 0; overflow: hidden; flex-direction: column;
+    border: none; padding: 0; color: var(--ink); overflow: hidden; flex-direction: column;
+    width: calc(100% - 16px); max-width: 620px;
+    height: calc(100% - env(safe-area-inset-top) - 18px); max-height: none;
+    margin: calc(env(safe-area-inset-top) + 10px) auto 8px; border-radius: 36px;
+    background: linear-gradient(160deg, rgba(58,58,64,.72), rgba(28,28,32,.82));
+    -webkit-backdrop-filter: blur(40px) saturate(180%); backdrop-filter: blur(40px) saturate(180%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 0 0 .5px rgba(255,255,255,.14), 0 30px 80px rgba(0,0,0,.7);
   }
-  dialog[open] { display: flex; animation: up .42s cubic-bezier(.2,.9,.25,1); }
-  dialog::backdrop { background: rgba(0,0,0,.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); animation: fade .3s ease; }
-  @keyframes up { from { transform: translateY(100%); } }
+  dialog[open] { display: flex; animation: up .5s var(--ease); }
+  dialog::backdrop { background: rgba(0,0,0,.45); animation: fade .3s ease; }
+  @keyframes up { from { transform: translateY(105%); } }
   @keyframes fade { from { opacity: 0; } }
-  @keyframes pop { from { transform: scale(.96); opacity: 0; } }
+  @keyframes pop { from { transform: scale(.9); opacity: 0; } }
   @media (min-width: 720px) {
-    dialog { height: auto; max-height: 90vh; margin: auto; border-radius: 24px; box-shadow: var(--shadow-lg); }
-    dialog[open] { animation: pop .3s cubic-bezier(.2,.9,.25,1); }
+    dialog { height: auto; max-height: 88vh; margin: auto; }
+    dialog[open] { animation: pop .35s var(--ease); }
   }
-  .bar {
-    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; flex: none;
-    padding: calc(env(safe-area-inset-top) + 10px) 20px 10px; border-bottom: .5px solid var(--line);
-  }
-  @media (min-width: 720px) { .bar { padding-top: 14px; } }
-  .bar h2 { margin: 0; font-size: 17px; font-weight: 600; }
-  .txt { border: none; background: none; color: var(--brand-ink); font-size: 17px; padding: 6px 0; justify-self: start; }
-  .txt.end { justify-self: end; font-weight: 600; }
-  .txt:disabled { color: var(--ink-3); }
-  .scroll { overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
+  .sheet-head { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 8px; padding: 14px 14px 8px; flex: none; }
+  .sheet-head h2 { margin: 0; text-align: center; font-size: 17px; font-weight: 600; }
+  .sheet-head .circle:disabled { opacity: .35; filter: saturate(0); }
+  .scroll { overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 
   /* ---------- Formulario ---------- */
-  .form { padding: 20px 20px calc(env(safe-area-inset-bottom) + 32px); }
+  .form { padding: 8px 18px calc(env(safe-area-inset-bottom) + 28px); }
   .dropzone {
-    width: 100%; aspect-ratio: 4 / 3; border-radius: 20px; border: 1.5px dashed var(--line); background: var(--surface);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--ink-2);
-    transition: all .2s;
+    width: 100%; aspect-ratio: 4 / 3; border-radius: 26px; border: 1.5px dashed rgba(255,255,255,.22); background: rgba(255,255,255,.04);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--ink-2);
   }
-  .dropzone.over { border-color: var(--brand); background: var(--brand-tint); }
-  .dropzone .cam {
-    width: 60px; height: 60px; border-radius: 50%; background: var(--brand); color: #fff; display: grid; place-items: center;
-    box-shadow: 0 8px 20px rgba(120,74,152,.35);
-  }
+  .dropzone.over { border-color: var(--brand-hi); background: rgba(120,74,152,.18); }
+  .dropzone .cam { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; color: #fff; }
   .dropzone .cam svg { width: 28px; height: 28px; }
   .dropzone b { color: var(--ink); font-size: 17px; font-weight: 600; }
   .dropzone small { font-size: 14px; }
-  .thumbs { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+  .thumbs { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; margin: 0 -18px; padding: 0 18px 2px; }
   .thumbs::-webkit-scrollbar { display: none; }
-  .thumb { position: relative; flex: none; width: 128px; aspect-ratio: 4 / 5; border-radius: 14px; overflow: hidden; background: var(--surface); }
-  .thumb:first-child { width: 168px; }
+  .thumb { position: relative; flex: none; width: 124px; aspect-ratio: 3 / 4; border-radius: 20px; overflow: hidden; background: #111; }
+  .thumb:first-child { width: 160px; }
   .thumb img { width: 100%; height: 100%; object-fit: cover; }
-  .thumb .rm {
-    position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border-radius: 50%; border: none;
-    background: rgba(0,0,0,.5); color: #fff; display: grid; place-items: center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-  }
-  .thumb .rm svg { width: 12px; height: 12px; }
-  .thumb .cover-tag {
-    position: absolute; left: 6px; bottom: 6px; font-size: 11px; font-weight: 600; color: #fff;
-    background: rgba(0,0,0,.5); padding: 3px 8px; border-radius: 999px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-  }
+  .thumb .rm { position: absolute; top: 7px; right: 7px; width: 28px; height: 28px; border-radius: 50%; border: none; display: grid; place-items: center; color: #fff; }
+  .thumb .rm svg { width: 11px; height: 11px; }
+  .thumb .cover-tag { position: absolute; left: 7px; bottom: 7px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
   .thumb .mk { position: absolute; inset: 0; border: none; background: none; }
   .thumb-add {
-    flex: none; width: 128px; aspect-ratio: 4 / 5; border-radius: 14px; border: 1.5px dashed var(--line); background: none;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--brand-ink); font-size: 14px; font-weight: 500;
+    flex: none; width: 124px; aspect-ratio: 3 / 4; border-radius: 20px; border: 1.5px dashed rgba(255,255,255,.22); background: rgba(255,255,255,.03);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--brand-text); font-size: 14px; font-weight: 500;
   }
   .thumb-add svg { width: 26px; height: 26px; }
-  .hint { font-size: 13px; color: var(--ink-3); margin: 8px 2px 0; }
+  .hint { font-size: 13px; color: var(--ink-3); margin: 10px 4px 0; }
 
-  .field { margin-top: 26px; }
-  .field > label { display: block; font-size: 13px; font-weight: 600; color: var(--ink-2); margin: 0 2px 8px; letter-spacing: 0; }
-  .field > label i { font-style: normal; font-weight: 400; color: var(--ink-3); }
-  .input {
-    width: 100%; border: 1px solid transparent; background: var(--surface); border-radius: 14px;
-    padding: 14px 16px; font-size: 17px; outline: none; transition: border-color .15s, background .15s;
+  .field { margin-top: 22px; }
+  .field > label { display: block; font-size: 13px; font-weight: 500; color: var(--ink-2); margin: 0 6px 8px; }
+  .field > label i { font-style: normal; color: var(--ink-3); }
+  .input, .tagbox {
+    width: 100%; border: .5px solid rgba(255,255,255,.1); background: var(--field); border-radius: 18px;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.25);
+    transition: border-color .2s, background .2s;
   }
-  .input:focus, .tagbox:focus-within { border-color: var(--brand); background: var(--bg); }
+  .input { padding: 15px 16px; font-size: 17px; outline: none; }
+  .input:focus, .tagbox:focus-within { border-color: rgba(190,150,225,.6); background: rgba(255,255,255,.1); }
   .input.name { font-size: 22px; font-weight: 600; letter-spacing: -.02em; }
-  .input::placeholder { color: var(--ink-3); font-weight: 400; }
+  .input::placeholder, .tagbox input::placeholder { color: var(--ink-3); font-weight: 400; }
   textarea.input { resize: vertical; min-height: 120px; line-height: 1.45; }
-  .tagbox {
-    display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--surface); border: 1px solid transparent;
-    border-radius: 14px; padding: 10px 12px; min-height: 52px; cursor: text; transition: border-color .15s, background .15s;
-  }
+  .tagbox { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 12px; min-height: 54px; cursor: text; }
   .tagbox input { flex: 1; min-width: 150px; border: none; background: none; outline: none; font-size: 17px; padding: 4px; }
-  .tagbox input::placeholder { color: var(--ink-3); }
   .tag {
-    display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 500;
-    padding: 6px 12px; border-radius: 999px; background: var(--brand-tint); color: var(--brand-ink); border: none;
+    display: inline-flex; align-items: center; gap: 7px; font-size: 15px; font-weight: 500; color: #F1E6FA;
+    padding: 7px 13px; border-radius: 999px; border: .5px solid rgba(210,175,240,.35);
+    background: linear-gradient(145deg, rgba(154,107,191,.45), rgba(120,74,152,.3));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.2);
   }
-  .tag svg { width: 10px; height: 10px; opacity: .7; }
+  .tag svg { width: 9px; height: 9px; opacity: .75; }
+  .danger { width: 100%; height: 52px; border-radius: 999px; border: none; color: var(--danger); font-size: 17px; font-weight: 600; margin-top: 8px; }
 
   /* ---------- Detalle ---------- */
-  .d-bar { position: absolute; top: 0; left: 0; right: 0; z-index: 2; display: flex; justify-content: space-between; padding: calc(env(safe-area-inset-top) + 12px) 16px 0; pointer-events: none; }
-  @media (min-width: 720px) { .d-bar { padding-top: 14px; } }
-  .round {
-    pointer-events: auto; border: none; height: 36px; min-width: 36px; padding: 0 12px; border-radius: 999px;
-    background: rgba(0,0,0,.42); color: #fff; font-size: 15px; font-weight: 600;
-    display: grid; place-items: center; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-  }
-  .round.icon { padding: 0; }
-  .round svg { width: 16px; height: 16px; }
-  .gallery-wrap { position: relative; background: var(--surface); }
-  .gallery { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; aspect-ratio: 4 / 5; max-height: 64vh; width: 100%; }
+  #detailSheet { background: linear-gradient(180deg, rgba(28,28,32,.92), rgba(18,18,22,.96)); }
+  .d-head { position: absolute; top: 0; left: 0; right: 0; z-index: 3; display: flex; justify-content: space-between; padding: 14px; pointer-events: none; }
+  .d-head > * { pointer-events: auto; }
+  .pill-btn { height: 44px; padding: 0 18px; border-radius: 999px; border: none; font-size: 16px; font-weight: 600; color: #fff; }
+  .hero { position: relative; }
+  .gallery { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; aspect-ratio: 4 / 5; max-height: 62vh; width: 100%; background: #111; }
   .gallery::-webkit-scrollbar { display: none; }
   .gallery img { flex: none; width: 100%; height: 100%; object-fit: cover; scroll-snap-align: center; cursor: zoom-in; }
-  .gallery .initials { flex: none; font-size: 72px; }
-  .dots { position: absolute; bottom: 14px; left: 0; right: 0; display: flex; justify-content: center; gap: 7px; }
-  .dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.5); transition: background .2s; }
-  .dots i.on { background: #fff; }
-  .d-body { padding: 24px 20px calc(env(safe-area-inset-bottom) + 36px); }
-  .d-body h1 { font-family: var(--display); font-size: 34px; font-weight: 700; letter-spacing: -.03em; line-height: 1.08; margin: 0; }
-  .d-date { color: var(--ink-3); font-size: 14px; margin: 6px 0 0; }
-  .d-sec { margin-top: 30px; }
-  .d-sec h4 { font-size: 13px; font-weight: 600; color: var(--ink-2); margin: 0 0 12px; text-transform: uppercase; letter-spacing: .04em; }
+  .gallery .initials { flex: none; width: 100%; font-size: 76px; }
+  .hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 40%; background: linear-gradient(to top, rgba(24,24,28,1), transparent); pointer-events: none; }
+  .dots { position: absolute; bottom: 92px; left: 50%; transform: translateX(-50%); z-index: 2; display: flex; gap: 6px; padding: 7px 10px; border-radius: 999px; }
+  .dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.4); transition: all .25s; }
+  .dots i.on { background: #fff; width: 18px; border-radius: 4px; }
+  .d-title { position: relative; z-index: 2; margin-top: -72px; padding: 0 20px; }
+  .d-title h1 { margin: 0; font-size: 34px; font-weight: 700; letter-spacing: -.03em; line-height: 1.08; text-shadow: 0 2px 16px rgba(0,0,0,.5); }
+  .d-country { margin: 6px 0 0; font-size: 17px; color: rgba(255,255,255,.85); }
+  .d-body { padding: 18px 16px calc(env(safe-area-inset-bottom) + 30px); }
+  .panel { border-radius: 26px; padding: 16px; margin-top: 12px; background: rgba(255,255,255,.06); border: .5px solid rgba(255,255,255,.08); }
+  .panel h4 { margin: 0 0 12px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
   .d-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-  .d-notes { font-size: 17px; white-space: pre-wrap; word-break: break-word; margin: 0; line-height: 1.5; }
+  .d-notes { font-size: 17px; white-space: pre-wrap; word-break: break-word; margin: 0; line-height: 1.5; color: rgba(255,255,255,.92); -webkit-user-select: text; user-select: text; }
   .d-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-  .d-photos img, .d-photos button { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 12px; cursor: zoom-in; }
+  .d-photos img, .d-photos button { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 14px; }
+  .d-photos img { cursor: zoom-in; }
   .d-photos button {
-    border: 1.5px dashed var(--line); background: none; color: var(--brand-ink); cursor: pointer;
+    border: 1.5px dashed rgba(255,255,255,.2); background: rgba(255,255,255,.03); color: var(--brand-text);
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 13px; font-weight: 500;
   }
   .d-photos button svg { width: 24px; height: 24px; }
   .muted { color: var(--ink-3); margin: 0; }
+  .d-date { color: var(--ink-3); font-size: 13px; text-align: center; margin: 22px 0 0; }
 
-  #lightbox { background: #000; max-width: none; width: 100vw; height: 100vh; height: 100dvh; max-height: none; margin: 0; border-radius: 0; box-shadow: none; }
+  #lightbox { background: #000; width: 100vw; max-width: none; height: 100vh; height: 100dvh; margin: 0; border-radius: 0; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
   #lightbox img { width: 100%; height: 100%; object-fit: contain; }
-  #lightbox .round { position: absolute; top: calc(env(safe-area-inset-top) + 14px); right: 16px; background: rgba(255,255,255,.2); }
+  #lightbox .circle { position: absolute; top: calc(env(safe-area-inset-top) + 12px); right: 14px; }
 
   /* ---------- Menú y aviso ---------- */
   .menu {
-    position: fixed; z-index: 40; right: 16px; top: calc(env(safe-area-inset-top) + 52px); width: 260px;
-    background: var(--glass); backdrop-filter: saturate(180%) blur(30px); -webkit-backdrop-filter: saturate(180%) blur(30px);
-    border-radius: 16px; box-shadow: var(--shadow-lg); overflow: hidden; border: .5px solid var(--line);
-    animation: pop .18s ease;
+    position: fixed; z-index: 40; right: 16px; top: calc(env(safe-area-inset-top) + 64px); width: 250px; border-radius: 22px; overflow: hidden;
+    background: linear-gradient(160deg, rgba(70,70,76,.72), rgba(36,36,40,.8)); animation: pop .22s var(--ease); transform-origin: top right;
   }
-  .menu button { display: block; width: 100%; border: none; background: none; padding: 13px 16px; font-size: 16px; text-align: left; }
+  .menu button { display: flex; align-items: center; justify-content: space-between; width: 100%; border: none; background: none; padding: 14px 18px; font-size: 16px; text-align: left; }
   .menu button + button { border-top: .5px solid var(--line); }
-  .menu button:hover { background: var(--surface); }
+  .menu button:active { background: rgba(255,255,255,.08); }
+  .menu svg { width: 18px; height: 18px; color: var(--ink-2); }
   .toast {
-    position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 92px); transform: translate(-50%, 16px);
-    background: var(--ink); color: var(--bg); padding: 11px 18px; border-radius: 999px; font-size: 15px; font-weight: 500;
-    opacity: 0; transition: all .3s cubic-bezier(.2,.9,.25,1); pointer-events: none; z-index: 60; white-space: nowrap;
+    position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 80px); z-index: 60;
+    padding: 12px 20px; border-radius: 999px; font-size: 15px; font-weight: 600; white-space: nowrap;
+    opacity: 0; transform: translate(-50%, 14px) scale(.95); transition: all .35s var(--ease); pointer-events: none;
   }
-  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
 
-  @media (max-width: 560px) {
-    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 12px; }
-    .card-img { border-radius: 16px; }
-    .card h3 { font-size: 16px; margin-top: 10px; }
-    .card p { font-size: 13px; }
-  }
+  @media (min-width: 720px) { .grid { gap: 20px; } .large { font-size: 44px; } }
   @media (prefers-reduced-motion: reduce) { *, *::before, ::backdrop { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
+<div class="ambient"></div>
 
-<header class="nav" id="nav">
-  <div class="nav-inner">
-    <div class="wordmark">in-cosmetics<span>Proveedores</span></div>
-    <div class="nav-title">Proveedores</div>
-    <button class="ghost" id="menuBtn" aria-label="Más opciones">
-      <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+<header class="top" id="top">
+  <div class="top-inner">
+    <img class="logo" src="logo.png" alt="in-cosmetics" />
+    <div class="top-title">Proveedores</div>
+    <button class="circle glass press" id="menuBtn" aria-label="Más opciones">
+      <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>
     </button>
   </div>
 </header>
 
-<div class="menu hidden" id="menu">
-  <button data-act="export">Descargar copia de seguridad</button>
-  <button data-act="import">Restaurar copia</button>
-  <button data-act="csv">Exportar a Excel</button>
+<div class="menu glass hidden" id="menu">
+  <button data-act="export">Descargar copia
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 10l5 5 5-5M5 21h14"/></svg></button>
+  <button data-act="import">Restaurar copia
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5M5 21h14"/></svg></button>
+  <button data-act="csv">Exportar a Excel
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></button>
 </div>
 <input type="file" id="importFile" accept="application/json,.json" hidden />
 
 <main>
-  <section class="hero">
-    <h1>Proveedores<span>.</span></h1>
-    <p id="lede">Quién trabaja qué, con fotos.</p>
-  </section>
-
-  <label class="search" id="searchBox">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-    <input id="q" type="search" placeholder="Buscar proveedor, país o activo" autocomplete="off" />
-  </label>
-  <div class="filters" id="filters"></div>
-
+  <h1 class="large">Proveedores</h1>
+  <p class="sub" id="lede">Quién trabaja qué, con fotos.</p>
+  <div class="chips" id="chips"></div>
   <section class="grid" id="grid"></section>
   <div class="empty hidden" id="empty"></div>
 </main>
 
-<button class="fab" id="addBtn">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-  Nuevo proveedor
-</button>
+<nav class="dock">
+  <div class="dock-inner">
+    <label class="search glass" id="searchBox">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Buscar" autocomplete="off" enterkeyhint="search" />
+    </label>
+    <button class="circle add glass tint press" id="addBtn" aria-label="Nuevo proveedor">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+  </div>
+</nav>
 
 <!-- Formulario -->
 <dialog id="formSheet">
-  <div class="bar">
-    <button class="txt" id="cancelBtn" type="button">Cancelar</button>
+  <div class="sheet-head">
+    <button class="circle glass press" id="cancelBtn" type="button" aria-label="Cancelar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
     <h2 id="formTitle">Nuevo proveedor</h2>
-    <button class="txt end" id="saveBtn" type="button">Guardar</button>
+    <button class="circle glass tint press" id="saveBtn" type="button" aria-label="Guardar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>
+    </button>
   </div>
   <div class="scroll">
     <form class="form" id="form" autocomplete="off" onsubmit="return false">
@@ -379,11 +365,11 @@
 
       <div class="field">
         <label for="f-notes">Notas <i>· opcional</i></label>
-        <textarea class="input" id="f-notes" placeholder="Precios, contacto, calidad, lo que quieras recordar…"></textarea>
+        <textarea class="input" id="f-notes" placeholder="Precios, contacto, stand, lo que quieras recordar…"></textarea>
       </div>
 
       <div class="field hidden" id="deleteWrap">
-        <button type="button" class="btn danger" id="deleteBtn">Eliminar proveedor</button>
+        <button type="button" class="danger glass press" id="deleteBtn">Eliminar proveedor</button>
       </div>
     </form>
   </div>
@@ -391,11 +377,11 @@
 
 <!-- Detalle -->
 <dialog id="detailSheet">
-  <div class="d-bar">
-    <button class="round icon" id="closeDetail" aria-label="Cerrar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+  <div class="d-head">
+    <button class="circle glass press" id="closeDetail" aria-label="Cerrar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
     </button>
-    <button class="round" id="editBtn">Editar</button>
+    <button class="pill-btn glass press" id="editBtn">Editar</button>
   </div>
   <div class="scroll" id="detail"></div>
 </dialog>
@@ -403,16 +389,16 @@
 
 <dialog id="lightbox">
   <img id="lbImg" alt="" />
-  <button class="round icon" id="lbClose" aria-label="Cerrar">
+  <button class="circle glass press" id="lbClose" aria-label="Cerrar">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
   </button>
 </dialog>
 
-<div class="toast" id="toast"></div>
+<div class="toast glass" id="toast"></div>
 
 <script>
 (() => {
-  // ---------- IndexedDB (misma base que la versión anterior, los datos se conservan) ----------
+  // ---------- IndexedDB (misma base de siempre, los datos se conservan) ----------
   const DB_NAME = 'inncosmetic-proveedores', STORE = 'proveedores';
   const dbp = new Promise((res, rej) => {
     const r = indexedDB.open(DB_NAME, 1);
@@ -514,34 +500,34 @@
   }
 
   function render() {
-    const tags = tagCounts().slice(0, 14);
+    const all = tagCounts(), tags = all.slice(0, 14);
     if (view.tag && !tags.some(t => norm(t.label) === norm(view.tag))) view.tag = null;
-    $('#filters').innerHTML = tags.length ? [`<button class="pill ${view.tag ? '' : 'on'}" data-tag="">Todos</button>`,
-      ...tags.map(t => `<button class="pill ${norm(t.label) === norm(view.tag) ? 'on' : ''}" data-tag="${esc(t.label)}">${esc(t.label)}</button>`)].join('') : '';
+    $('#chips').innerHTML = tags.length ? [`<button class="chip glass press ${view.tag ? '' : 'tint'}" data-tag="">Todos</button>`,
+      ...tags.map(t => `<button class="chip glass press ${norm(t.label) === norm(view.tag) ? 'tint' : ''}" data-tag="${esc(t.label)}">${esc(t.label)}</button>`)].join('') : '';
+    $('#chips').classList.toggle('hidden', !tags.length);
 
     $('#lede').textContent = items.length
-      ? `${items.length} ${items.length === 1 ? 'proveedor' : 'proveedores'} · ${tagCounts().length} activos`
+      ? `${items.length} ${items.length === 1 ? 'proveedor' : 'proveedores'} · ${all.length} ${all.length === 1 ? 'activo' : 'activos'}`
       : 'Quién trabaja qué, con fotos.';
-    $('#searchBox').classList.toggle('hidden', !items.length);
 
     const list = filtered();
     $('#grid').innerHTML = list.map(p => {
       const photos = p.photos || [], tags = p.tags || [];
+      const line = [countryLabel(p), tags.join(', ')].filter(Boolean).join(' · ');
       return `<button class="card" data-id="${p.id}">
-        <div class="card-img">
-          ${photos[0] ? `<img src="${photos[0]}" alt="" loading="lazy" />` : `<div class="initials">${esc(initials(p.name))}</div>`}
-          ${photos.length > 1 ? `<span class="n">${PH_ICON}${photos.length}</span>` : ''}
+        ${photos[0] ? `<img src="${photos[0]}" alt="" loading="lazy" />` : `<div class="initials">${esc(initials(p.name))}</div>`}
+        ${photos.length > 1 ? `<span class="count glass">${PH_ICON}${photos.length}</span>` : ''}
+        <div class="info glass">
+          <h3>${esc(p.name)}</h3>
+          <p class="meta ${line ? '' : 'dim'}">${line ? esc(line) : 'Sin activos cargados'}</p>
         </div>
-        <h3>${esc(p.name)}</h3>
-        ${p.country ? `<p class="country">${esc(countryLabel(p))}</p>` : ''}
-        <p class="${tags.length ? '' : 'none'}">${tags.length ? esc(tags.join(' · ')) : 'Sin activos cargados'}</p>
       </button>`;
     }).join('');
 
     const empty = $('#empty');
     empty.innerHTML = !items.length
-      ? `<div class="empty-art">${CAM_ICON}</div><h2>Empezá por el primero.</h2><p>Sacale una foto, poné el nombre, el país y los activos que trabaja. Nada más.</p>`
-      : `<h2>Sin resultados.</h2><p>Nada coincide con “${esc(view.q)}”.</p>`;
+      ? `<div class="empty-icon glass tint">${CAM_ICON}</div><h2>Empezá por el primero</h2><p>Sacale una foto, poné el nombre, el país y los activos que trabaja. Tocá <b>+</b> abajo.</p>`
+      : `<h2>Sin resultados</h2><p>Nada coincide con “${esc(view.q)}”.</p>`;
     empty.classList.toggle('hidden', list.length > 0);
   }
 
@@ -552,26 +538,28 @@
     const photos = p.photos || [], tags = p.tags || [];
     const date = new Date(p.updatedAt || p.createdAt || Date.now()).toLocaleDateString('es-UY', { day: 'numeric', month: 'long', year: 'numeric' });
     $('#detail').innerHTML = `
-      <div class="gallery-wrap">
+      <div class="hero">
         <div class="gallery" id="gallery">
-          ${photos.length ? photos.map((s, i) => `<img src="${s}" data-i="${i}" alt="" />`).join('') : `<div class="initials" style="width:100%">${esc(initials(p.name))}</div>`}
+          ${photos.length ? photos.map((s, i) => `<img src="${s}" data-i="${i}" alt="" />`).join('') : `<div class="initials">${esc(initials(p.name))}</div>`}
         </div>
-        ${photos.length > 1 ? `<div class="dots">${photos.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>` : ''}
+        ${photos.length > 1 ? `<div class="dots glass">${photos.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>` : ''}
       </div>
-      <div class="d-body">
+      <div class="d-title">
         <h1>${esc(p.name)}</h1>
         ${p.country ? `<p class="d-country">${esc(countryLabel(p))}</p>` : ''}
-        <p class="d-date">Actualizado el ${date}</p>
-        <div class="d-sec"><h4>Activos que trabaja</h4>
+      </div>
+      <div class="d-body">
+        <div class="panel"><h4>Activos que trabaja</h4>
           ${tags.length ? `<div class="d-tags">${tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>` : '<p class="muted">Todavía no cargaste activos.</p>'}
         </div>
-        ${p.notes ? `<div class="d-sec"><h4>Notas</h4><p class="d-notes">${esc(p.notes)}</p></div>` : ''}
-        <div class="d-sec"><h4>Fotos${photos.length ? ` · ${photos.length}` : ''}</h4>
+        ${p.notes ? `<div class="panel"><h4>Notas</h4><p class="d-notes">${esc(p.notes)}</p></div>` : ''}
+        <div class="panel"><h4>Fotos${photos.length ? ` · ${photos.length}` : ''}</h4>
           <div class="d-photos">
             ${photos.map((s, i) => `<img src="${s}" data-i="${i}" alt="" loading="lazy" />`).join('')}
-            <button type="button" id="quickAdd">${CAM_ICON}Agregar</button>
+            <button type="button" id="quickAdd" class="press">${CAM_ICON}Agregar</button>
           </div>
         </div>
+        <p class="d-date">Actualizado el ${date}</p>
       </div>`;
     const g = $('#gallery');
     g.addEventListener('scroll', () => {
@@ -607,11 +595,11 @@
     $('#formTitle').textContent = isNew ? 'Nuevo proveedor' : 'Editar';
     $('#deleteWrap').classList.toggle('hidden', isNew);
     $('#f-name').value = editing.name || '';
-    $('#f-notes').value = editing.notes || '';
     $('#f-country').value = editing.country || '';
-    $('#countryList').innerHTML = [...new Set([...items.map(x => x.country).filter(Boolean), ...Object.keys(COUNTRIES)])].map(c => `<option value="${esc(c)}">`).join('');
+    $('#f-notes').value = editing.notes || '';
     $('#tagInput').value = '';
     $('#tagList').innerHTML = tagCounts().map(t => `<option value="${esc(t.label)}">`).join('');
+    $('#countryList').innerHTML = [...new Set([...items.map(x => x.country).filter(Boolean), ...Object.keys(COUNTRIES)])].map(c => `<option value="${esc(c)}">`).join('');
     renderPhotos(); renderTags(); updateSave();
     const sheet = $('#formSheet');
     if (!sheet.open) sheet.showModal();
@@ -621,13 +609,13 @@
   function renderPhotos() {
     const ph = editing.photos;
     $('#photos').innerHTML = !ph.length
-      ? `<button type="button" class="dropzone" id="drop"><span class="cam">${CAM_ICON}</span><b>Agregar fotos</b><small>Sacá una foto o elegila de la galería</small></button>`
+      ? `<button type="button" class="dropzone press" id="drop"><span class="cam glass tint">${CAM_ICON}</span><b>Agregar fotos</b><small>Sacá una foto o elegila de la galería</small></button>`
       : `<div class="thumbs">${ph.map((s, i) => `
           <div class="thumb"><img src="${s}" alt="" />
-            ${i ? `<button type="button" class="mk" data-cover="${i}" aria-label="Usar como portada"></button>` : '<span class="cover-tag">Portada</span>'}
-            <button type="button" class="rm" data-rm="${i}" aria-label="Quitar foto">${X_ICON}</button>
+            ${i ? `<button type="button" class="mk" data-cover="${i}" aria-label="Usar como portada"></button>` : '<span class="cover-tag glass">Portada</span>'}
+            <button type="button" class="rm glass" data-rm="${i}" aria-label="Quitar foto">${X_ICON}</button>
           </div>`).join('')}
-          <button type="button" class="thumb-add" id="drop">${CAM_ICON}Agregar</button>
+          <button type="button" class="thumb-add press" id="drop">${CAM_ICON}Agregar</button>
         </div><p class="hint">Tocá una foto para hacerla portada.</p>`;
   }
   function renderTags() {
@@ -654,8 +642,8 @@
     if (!name) return $('#f-name').focus();
     if ($('#tagInput').value.trim()) addTag($('#tagInput').value);
     editing.name = name;
-    editing.notes = $('#f-notes').value.trim();
     editing.country = $('#f-country').value.trim();
+    editing.notes = $('#f-notes').value.trim();
     const now = Date.now();
     editing.createdAt = editing.createdAt || now; editing.updatedAt = now;
     try { await dbPut(editing); } catch { return toast('No hay espacio para guardar'); }
@@ -682,7 +670,7 @@
   const today = () => new Date().toISOString().slice(0, 10);
   function exportJSON() {
     if (!items.length) return toast('Todavía no hay proveedores');
-    download(`proveedores-inncosmetic-${today()}.json`, JSON.stringify({ app: 'inncosmetic-proveedores', version: 2, exportedAt: new Date().toISOString(), items }), 'application/json');
+    download(`proveedores-${today()}.json`, JSON.stringify({ app: 'inncosmetic-proveedores', version: 3, exportedAt: new Date().toISOString(), items }), 'application/json');
     toast('Copia descargada');
   }
   function exportCSV() {
@@ -690,7 +678,7 @@
     const cell = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const rows = [['Proveedor', 'País', 'Activos', 'Notas', 'Fotos'].map(cell).join(';'),
       ...filtered().map(p => [p.name, p.country, (p.tags || []).join(', '), p.notes, (p.photos || []).length].map(cell).join(';'))];
-    download(`proveedores-inncosmetic-${today()}.csv`, '﻿' + rows.join('\r\n'), 'text/csv;charset=utf-8');
+    download(`proveedores-${today()}.csv`, '﻿' + rows.join('\r\n'), 'text/csv;charset=utf-8');
     toast('Planilla descargada');
   }
   async function importJSON(file) {
@@ -701,7 +689,7 @@
       let n = 0;
       for (const p of list) {
         if (!p || typeof p.name !== 'string') continue;
-        const item = { tags: [], photos: [], notes: '', ...p, id: p.id || uid() };
+        const item = { tags: [], photos: [], notes: '', country: '', ...p, id: p.id || uid() };
         await dbPut(item);
         const i = items.findIndex(x => x.id === item.id);
         if (i >= 0) items[i] = item; else items.push(item);
@@ -714,9 +702,10 @@
   // ---------- Eventos ----------
   $('#addBtn').onclick = () => openForm();
   $('#q').oninput = e => { view.q = e.target.value; render(); };
-  $('#filters').onclick = e => { const b = e.target.closest('[data-tag]'); if (b) { view.tag = b.dataset.tag || null; render(); } };
+  $('#q').onkeydown = e => { if (e.key === 'Enter') e.target.blur(); };
+  $('#chips').onclick = e => { const b = e.target.closest('[data-tag]'); if (b) { view.tag = b.dataset.tag || null; render(); } };
   $('#grid').onclick = e => { const c = e.target.closest('.card'); if (c) openDetail(c.dataset.id); };
-  addEventListener('scroll', () => $('#nav').classList.toggle('scrolled', scrollY > 60), { passive: true });
+  addEventListener('scroll', () => $('#top').classList.toggle('scrolled', scrollY > 40), { passive: true });
 
   const menu = $('#menu');
   $('#menuBtn').onclick = e => { e.stopPropagation(); menu.classList.toggle('hidden'); };
@@ -769,7 +758,7 @@
   $('#closeDetail').onclick = () => $('#detailSheet').close();
   $('#editBtn').onclick = () => openForm(items.find(x => x.id === currentId));
   $('#lbClose').onclick = () => $('#lightbox').close();
-  $('#lightbox').onclick = e => { if (e.target.id !== 'lbClose') $('#lightbox').close(); };
+  $('#lightbox').onclick = e => { if (!e.target.closest('#lbClose')) $('#lightbox').close(); };
   for (const d of [$('#formSheet'), $('#detailSheet')]) {
     d.addEventListener('click', e => {
       if (e.target !== d) return;
