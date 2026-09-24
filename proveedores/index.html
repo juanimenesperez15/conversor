@@ -14,315 +14,271 @@
 <link rel="icon" type="image/png" href="icon-180.png" />
 <title>Proveedores in-cosmetics</title>
 <style>
-  /* Paleta in-cosmetics (in-cosmetics.com), siempre en modo oscuro */
+  /* Colores del sistema iOS en modo oscuro + violeta in-cosmetics como color de acento */
   :root {
     color-scheme: dark;
-    --brand: #784A98;
-    --brand-hi: #9A6BBF;
-    --brand-text: #D4BCE8;
-    --bg: #000;
-    --ink: #FFFFFF;
-    --ink-2: rgba(235,235,245,.62);
-    --ink-3: rgba(235,235,245,.34);
-    --line: rgba(255,255,255,.12);
-    --field: rgba(255,255,255,.07);
-    --danger: #FF453A;
+    --brand: #784A98;           /* violeta in-cosmetics */
+    --tint: #B48BDB;            /* violeta aclarado para texto/íconos sobre negro */
+    --tint-fill: rgba(180,139,219,.18);
+    --bg: #000000;              /* systemBackground */
+    --bg-2: #1C1C1E;            /* secondarySystemBackground */
+    --bg-3: #2C2C2E;            /* tertiarySystemBackground */
+    --fill: rgba(118,118,128,.24);
+    --sep: rgba(84,84,88,.65);
+    --label: #FFFFFF;
+    --label-2: rgba(235,235,245,.6);
+    --label-3: rgba(235,235,245,.3);
+    --red: #FF453A;
     --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", "Segoe UI", Roboto, Arial, sans-serif;
-    --ease: cubic-bezier(.2,.9,.25,1);
+    --spring: cubic-bezier(.2,.9,.25,1);
   }
 
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html { -webkit-text-size-adjust: 100%; background: var(--bg); }
+  html { background: var(--bg); -webkit-text-size-adjust: 100%; }
   body {
-    margin: 0; min-height: 100vh; min-height: 100dvh; background: var(--bg); color: var(--ink);
-    font-family: var(--font); font-size: 17px; line-height: 1.35; letter-spacing: -.012em;
-    -webkit-font-smoothing: antialiased; -webkit-user-select: none; user-select: none;
+    margin: 0; min-height: 100vh; min-height: 100dvh; background: var(--bg); color: var(--label);
+    font-family: var(--font); font-size: 17px; line-height: 1.29; letter-spacing: normal;
+    -webkit-font-smoothing: antialiased; -webkit-user-select: none; user-select: none; overscroll-behavior-y: none;
   }
-  input, textarea { -webkit-user-select: text; user-select: text; }
+  input, textarea, .selectable { -webkit-user-select: text; user-select: text; }
   button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit; }
   button { cursor: pointer; }
   img { display: block; -webkit-user-drag: none; }
   .hidden { display: none !important; }
 
-  /* Luz ambiente violeta detrás del vidrio */
-  .ambient { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
-  .ambient::before, .ambient::after {
-    content: ""; position: absolute; border-radius: 50%; filter: blur(80px);
-  }
-  .ambient::before { width: 70vmax; height: 70vmax; left: -25vmax; top: -30vmax; background: radial-gradient(circle, rgba(120,74,152,.55), transparent 65%); }
-  .ambient::after { width: 60vmax; height: 60vmax; right: -25vmax; bottom: -25vmax; background: radial-gradient(circle, rgba(74,44,97,.6), transparent 65%); }
-
-  /* ---------- Material Liquid Glass ---------- */
+  /* ---------- Vidrio (Liquid Glass, modo oscuro) ---------- */
   .glass {
-    position: relative;
-    background: linear-gradient(145deg, rgba(255,255,255,.16), rgba(255,255,255,.05) 45%, rgba(255,255,255,.08));
-    -webkit-backdrop-filter: blur(24px) saturate(190%); backdrop-filter: blur(24px) saturate(190%);
-    border: .5px solid rgba(255,255,255,.22);
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,.32),
-      inset 0 -1px 1px rgba(255,255,255,.06),
-      inset 0 0 18px rgba(255,255,255,.04),
-      0 10px 30px rgba(0,0,0,.45);
+    background: rgba(44,44,48,.55);
+    -webkit-backdrop-filter: blur(28px) saturate(180%); backdrop-filter: blur(28px) saturate(180%);
+    border: .5px solid rgba(255,255,255,.13);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.16), inset 0 -.5px 0 rgba(255,255,255,.04), 0 8px 28px rgba(0,0,0,.55);
   }
   .glass.tint {
-    background: linear-gradient(145deg, rgba(170,120,210,.75), rgba(120,74,152,.62) 50%, rgba(90,52,120,.7));
-    border-color: rgba(220,190,245,.4);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 -1px 1px rgba(255,255,255,.1), 0 10px 30px rgba(120,74,152,.45);
+    background: linear-gradient(160deg, rgba(150,105,190,.9), rgba(120,74,152,.88));
+    border-color: rgba(230,205,250,.35);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 8px 26px rgba(120,74,152,.45);
   }
-  .press { transition: transform .35s var(--ease), filter .2s; }
-  .press:active { transform: scale(.93); filter: brightness(1.25); }
+  .tap { transition: transform .3s var(--spring), opacity .2s; }
+  .tap:active { transform: scale(.94); opacity: .85; }
 
-  /* ---------- Barra superior con borde difuminado ---------- */
-  .top {
-    position: sticky; top: 0; z-index: 20; padding: calc(env(safe-area-inset-top) + 10px) 20px 14px;
+  /* ---------- Barra de navegación ---------- */
+  .nav { position: sticky; top: 0; z-index: 20; padding: env(safe-area-inset-top) 16px 0; }
+  .nav::before {
+    content: ""; position: absolute; inset: 0 0 -20px; z-index: -1; opacity: 0; transition: opacity .25s;
+    background: rgba(0,0,0,.7);
+    -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
+    -webkit-mask-image: linear-gradient(#000 70%, transparent); mask-image: linear-gradient(#000 70%, transparent);
   }
-  .top::before {
-    content: ""; position: absolute; inset: 0 0 -24px; z-index: -1; opacity: 0; transition: opacity .3s;
-    background: linear-gradient(to bottom, rgba(0,0,0,.75), rgba(0,0,0,.35) 70%, transparent);
-    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-    -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent); mask-image: linear-gradient(to bottom, #000 55%, transparent);
-  }
-  .top.scrolled::before { opacity: 1; }
-  .top-inner { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .nav.scrolled::before { opacity: 1; }
+  .nav-row { max-width: 1100px; margin: 0 auto; height: 56px; display: flex; align-items: center; justify-content: space-between; position: relative; }
   .logo { height: 22px; width: auto; transition: opacity .2s; }
-  .top-title { position: absolute; left: 50%; transform: translate(-50%, 6px); font-size: 17px; font-weight: 600; opacity: 0; transition: all .3s var(--ease); pointer-events: none; }
-  .top.scrolled .top-title { opacity: 1; transform: translate(-50%, 0); }
-  .top.scrolled .logo { opacity: 0; }
-  .circle {
-    width: 44px; height: 44px; border-radius: 50%; border: none; display: grid; place-items: center; color: var(--ink); flex: none;
-  }
-  .circle svg { width: 20px; height: 20px; }
+  .nav-title { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -30%); font-size: 17px; font-weight: 600; opacity: 0; transition: all .25s var(--spring); pointer-events: none; }
+  .nav.scrolled .nav-title { opacity: 1; transform: translate(-50%, -50%); }
+  .nav.scrolled .logo { opacity: 0; }
+  .round { width: 44px; height: 44px; border-radius: 50%; border: none; display: grid; place-items: center; color: var(--label); flex: none; padding: 0; }
+  .round svg { width: 19px; height: 19px; }
 
-  main { max-width: 1120px; margin: 0 auto; padding: 4px 20px calc(env(safe-area-inset-bottom) + 120px); }
-  .large { font-size: 34px; font-weight: 700; letter-spacing: -.03em; margin: 8px 0 2px; line-height: 1.1; }
-  .sub { color: var(--ink-2); font-size: 15px; margin: 0; }
+  main { max-width: 1100px; margin: 0 auto; padding: 2px 16px calc(env(safe-area-inset-bottom) + 110px); }
+  .large-title { font-size: 34px; line-height: 41px; font-weight: 700; margin: 0; }
+  .caption { color: var(--label-2); font-size: 15px; margin: 2px 0 0; }
 
-  .chips { display: flex; gap: 8px; overflow-x: auto; padding: 18px 20px 6px; margin: 0 -20px; scrollbar-width: none; }
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding: 16px 16px 4px; margin: 0 -16px; scrollbar-width: none; }
   .chips::-webkit-scrollbar { display: none; }
-  .chip { border: none; height: 36px; padding: 0 16px; border-radius: 999px; font-size: 15px; font-weight: 500; white-space: nowrap; color: var(--ink); flex: none; }
+  .chip { flex: none; height: 34px; padding: 0 15px; border-radius: 17px; border: none; background: var(--bg-2); color: var(--label); font-size: 15px; font-weight: 500; }
+  .chip.on { background: var(--brand); }
 
-  /* ---------- Tarjetas ---------- */
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); gap: 14px; margin-top: 18px; }
-  @media (max-width: 560px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } }
-  .card {
-    position: relative; border: none; padding: 0; aspect-ratio: 3 / 4; border-radius: 28px; overflow: hidden; text-align: left;
-    background: #111; min-width: 0; box-shadow: 0 0 0 .5px rgba(255,255,255,.1), 0 12px 32px rgba(0,0,0,.5);
-    transition: transform .4s var(--ease);
+  /* ---------- Álbumes (como la app Fotos) ---------- */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 22px 16px; margin-top: 18px; }
+  @media (max-width: 520px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 14px; } }
+  .album { border: none; background: none; padding: 0; text-align: left; min-width: 0; color: inherit; }
+  .album .thumb { position: relative; aspect-ratio: 1; border-radius: 14px; overflow: hidden; background: var(--bg-2); transition: transform .3s var(--spring); }
+  .album:active .thumb { transform: scale(.96); }
+  .album .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .album h3 { margin: 8px 1px 0; font-size: 15px; font-weight: 600; line-height: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .album p { margin: 1px 1px 0; font-size: 13px; line-height: 18px; color: var(--label-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .badge { position: absolute; right: 7px; bottom: 7px; height: 22px; padding: 0 8px; border-radius: 11px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+  .badge svg { width: 12px; height: 12px; }
+  .mono {
+    width: 100%; height: 100%; display: grid; place-items: center; font-size: 40px; font-weight: 600; color: rgba(255,255,255,.92);
+    background: linear-gradient(160deg, #8F63B3, #5E3A77);
   }
-  .card:active { transform: scale(.965); }
-  .card > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  .card .initials { position: absolute; inset: 0; }
-  .initials {
-    display: grid; place-items: center; color: rgba(255,255,255,.9); font-size: 46px; font-weight: 700; letter-spacing: -.03em;
-    background: radial-gradient(circle at 30% 20%, rgba(255,255,255,.22), transparent 55%), linear-gradient(160deg, #9A6BBF, #784A98 50%, #3E2452);
-  }
-  .card .info {
-    position: absolute; left: 8px; right: 8px; bottom: 8px; border-radius: 21px; padding: 11px 13px 12px;
-    background: linear-gradient(145deg, rgba(40,40,44,.42), rgba(20,20,24,.3));
-  }
-  .card h3 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -.02em; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .card .meta { margin: 3px 0 0; font-size: 12.5px; color: rgba(255,255,255,.78); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .card .meta.dim { color: rgba(255,255,255,.5); }
-  .count {
-    position: absolute; top: 10px; right: 10px; height: 28px; padding: 0 10px; border-radius: 999px;
-    display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600;
-  }
-  .count svg { width: 13px; height: 13px; }
 
-  .empty { text-align: center; padding: 70px 24px 20px; }
-  .empty-icon { width: 92px; height: 92px; border-radius: 28px; margin: 0 auto 22px; display: grid; place-items: center; }
-  .empty-icon svg { width: 42px; height: 42px; }
-  .empty h2 { font-size: 24px; letter-spacing: -.02em; margin: 0 0 8px; }
-  .empty p { color: var(--ink-2); margin: 0 auto; max-width: 320px; font-size: 16px; }
+  .unavailable { text-align: center; padding: 76px 24px 0; }
+  .unavailable svg { width: 54px; height: 54px; color: var(--label-2); }
+  .unavailable h2 { font-size: 22px; font-weight: 700; margin: 14px 0 6px; }
+  .unavailable p { color: var(--label-2); font-size: 15px; margin: 0 auto; max-width: 300px; }
+  .unavailable .cta { margin-top: 20px; height: 44px; padding: 0 22px; border-radius: 22px; border: none; font-size: 17px; font-weight: 600; color: #fff; }
 
-  /* ---------- Barra inferior flotante (estilo iOS 26) ---------- */
-  .dock {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; pointer-events: none;
-    padding: 0 16px calc(env(safe-area-inset-bottom) + 10px);
-  }
-  .dock::before {
-    content: ""; position: absolute; inset: -30px 0 0; z-index: -1;
-    background: linear-gradient(to top, rgba(0,0,0,.7), transparent);
-  }
-  .dock-inner { max-width: 640px; margin: 0 auto; display: flex; gap: 10px; align-items: center; pointer-events: auto; }
-  @media (min-width: 900px) { .dock { padding-bottom: 20px; } }
-  .search { flex: 1; height: 52px; border-radius: 999px; display: flex; align-items: center; gap: 9px; padding: 0 18px; min-width: 0; }
-  .search svg { width: 18px; height: 18px; color: var(--ink-2); flex: none; }
+  /* ---------- Barra inferior flotante (iOS 26) ---------- */
+  .dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 0 14px calc(env(safe-area-inset-bottom) + 8px); pointer-events: none; }
+  .dock::before { content: ""; position: absolute; inset: -40px 0 0; z-index: -1; background: linear-gradient(transparent, rgba(0,0,0,.85)); }
+  .dock-row { max-width: 620px; margin: 0 auto; display: flex; gap: 10px; pointer-events: auto; }
+  @media (min-width: 900px) { .dock { padding-bottom: 18px; } }
+  .search { flex: 1; min-width: 0; height: 50px; border-radius: 25px; display: flex; align-items: center; gap: 8px; padding: 0 16px; }
+  .search svg { width: 17px; height: 17px; color: var(--label-2); flex: none; }
   .search input { flex: 1; min-width: 0; border: none; background: none; outline: none; font-size: 17px; }
-  .search input::placeholder { color: var(--ink-2); }
-  .add { width: 52px; height: 52px; }
-  .add svg { width: 24px; height: 24px; }
+  .search input::placeholder { color: var(--label-2); }
+  .search input::-webkit-search-cancel-button { -webkit-appearance: none; }
+  .add { width: 50px; height: 50px; }
+  .add svg { width: 22px; height: 22px; }
 
-  /* ---------- Hojas ---------- */
+  /* ---------- Hojas (sheets) ---------- */
   dialog {
-    border: none; padding: 0; color: var(--ink); overflow: hidden; flex-direction: column;
-    width: calc(100% - 16px); max-width: 620px;
-    height: calc(100% - env(safe-area-inset-top) - 18px); max-height: none;
-    margin: calc(env(safe-area-inset-top) + 10px) auto 8px; border-radius: 36px;
-    background: linear-gradient(160deg, rgba(58,58,64,.72), rgba(28,28,32,.82));
-    -webkit-backdrop-filter: blur(40px) saturate(180%); backdrop-filter: blur(40px) saturate(180%);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 0 0 .5px rgba(255,255,255,.14), 0 30px 80px rgba(0,0,0,.7);
+    border: none; padding: 0; color: var(--label); overflow: hidden; flex-direction: column;
+    width: 100%; max-width: 640px; max-height: none;
+    height: calc(100% - env(safe-area-inset-top) - 10px);
+    margin: calc(env(safe-area-inset-top) + 10px) auto 0; border-radius: 38px 38px 0 0;
+    background: var(--bg-2); box-shadow: 0 -.5px 0 rgba(255,255,255,.12);
   }
-  dialog[open] { display: flex; animation: up .5s var(--ease); }
-  dialog::backdrop { background: rgba(0,0,0,.45); animation: fade .3s ease; }
-  @keyframes up { from { transform: translateY(105%); } }
+  dialog[open] { display: flex; animation: sheet-up .5s var(--spring); }
+  dialog::backdrop { background: rgba(0,0,0,.5); animation: fade .35s ease; }
+  @keyframes sheet-up { from { transform: translateY(100%); } }
   @keyframes fade { from { opacity: 0; } }
-  @keyframes pop { from { transform: scale(.9); opacity: 0; } }
+  @keyframes pop { from { transform: scale(.92); opacity: 0; } }
   @media (min-width: 720px) {
-    dialog { height: auto; max-height: 88vh; margin: auto; }
-    dialog[open] { animation: pop .35s var(--ease); }
+    dialog { height: auto; max-height: 88vh; margin: auto; border-radius: 38px; box-shadow: 0 0 0 .5px rgba(255,255,255,.12), 0 40px 100px rgba(0,0,0,.8); }
+    dialog[open] { animation: pop .35s var(--spring); }
   }
-  .sheet-head { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 8px; padding: 14px 14px 8px; flex: none; }
-  .sheet-head h2 { margin: 0; text-align: center; font-size: 17px; font-weight: 600; }
-  .sheet-head .circle:disabled { opacity: .35; filter: saturate(0); }
-  .scroll { overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+  .grabber { position: absolute; top: 6px; left: 50%; transform: translateX(-50%); width: 36px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.28); z-index: 5; }
+  .sheet-bar { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 8px; padding: 16px 16px 6px; flex: none; }
+  .sheet-bar h2 { margin: 0; text-align: center; font-size: 17px; font-weight: 600; }
+  .sheet-bar .round:disabled { opacity: .4; }
+  .sheet-bar .round:disabled.tint { background: var(--fill); border-color: transparent; box-shadow: none; }
+  .scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 
-  /* ---------- Formulario ---------- */
-  .form { padding: 8px 18px calc(env(safe-area-inset-bottom) + 28px); }
-  .dropzone {
-    width: 100%; aspect-ratio: 4 / 3; border-radius: 26px; border: 1.5px dashed rgba(255,255,255,.22); background: rgba(255,255,255,.04);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--ink-2);
-  }
-  .dropzone.over { border-color: var(--brand-hi); background: rgba(120,74,152,.18); }
-  .dropzone .cam { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; color: #fff; }
-  .dropzone .cam svg { width: 28px; height: 28px; }
-  .dropzone b { color: var(--ink); font-size: 17px; font-weight: 600; }
-  .dropzone small { font-size: 14px; }
-  .thumbs { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; margin: 0 -18px; padding: 0 18px 2px; }
-  .thumbs::-webkit-scrollbar { display: none; }
-  .thumb { position: relative; flex: none; width: 124px; aspect-ratio: 3 / 4; border-radius: 20px; overflow: hidden; background: #111; }
-  .thumb:first-child { width: 160px; }
-  .thumb img { width: 100%; height: 100%; object-fit: cover; }
-  .thumb .rm { position: absolute; top: 7px; right: 7px; width: 28px; height: 28px; border-radius: 50%; border: none; display: grid; place-items: center; color: #fff; }
-  .thumb .rm svg { width: 11px; height: 11px; }
-  .thumb .cover-tag { position: absolute; left: 7px; bottom: 7px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
-  .thumb .mk { position: absolute; inset: 0; border: none; background: none; }
-  .thumb-add {
-    flex: none; width: 124px; aspect-ratio: 3 / 4; border-radius: 20px; border: 1.5px dashed rgba(255,255,255,.22); background: rgba(255,255,255,.03);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--brand-text); font-size: 14px; font-weight: 500;
-  }
-  .thumb-add svg { width: 26px; height: 26px; }
-  .hint { font-size: 13px; color: var(--ink-3); margin: 10px 4px 0; }
+  /* ---------- Listas agrupadas ---------- */
+  .content { padding: 4px 16px calc(env(safe-area-inset-bottom) + 30px); }
+  .header { font-size: 13px; color: var(--label-2); text-transform: uppercase; margin: 24px 16px 7px; }
+  .footer { font-size: 13px; color: var(--label-2); margin: 7px 16px 0; }
+  .group { background: var(--bg-3); border-radius: 26px; overflow: hidden; }
+  .cell { position: relative; display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 16px; }
+  .cell + .cell::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: .5px solid var(--sep); }
+  .cell input, .cell textarea { flex: 1; min-width: 0; border: none; background: none; outline: none; font-size: 17px; padding: 15px 0; }
+  .cell input::placeholder, .cell textarea::placeholder { color: var(--label-3); }
+  .cell textarea { resize: none; min-height: 132px; line-height: 22px; padding: 14px 0; }
+  .cell .lead { width: 26px; text-align: center; font-size: 20px; flex: none; color: var(--label-3); }
+  .cell.name input { font-size: 20px; font-weight: 600; }
+  .cell.btn { justify-content: center; border: none; width: 100%; background: none; font-size: 17px; }
+  .cell.btn.red { color: var(--red); }
 
-  .field { margin-top: 22px; }
-  .field > label { display: block; font-size: 13px; font-weight: 500; color: var(--ink-2); margin: 0 6px 8px; }
-  .field > label i { font-style: normal; color: var(--ink-3); }
-  .input, .tagbox {
-    width: 100%; border: .5px solid rgba(255,255,255,.1); background: var(--field); border-radius: 18px;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,.25);
-    transition: border-color .2s, background .2s;
+  /* Fotos en el formulario */
+  .add-photos {
+    width: 100%; border: none; border-radius: 26px; background: var(--bg-3); padding: 28px 16px; color: var(--tint);
+    display: flex; flex-direction: column; align-items: center; gap: 10px; font-size: 17px; font-weight: 600;
   }
-  .input { padding: 15px 16px; font-size: 17px; outline: none; }
-  .input:focus, .tagbox:focus-within { border-color: rgba(190,150,225,.6); background: rgba(255,255,255,.1); }
-  .input.name { font-size: 22px; font-weight: 600; letter-spacing: -.02em; }
-  .input::placeholder, .tagbox input::placeholder { color: var(--ink-3); font-weight: 400; }
-  textarea.input { resize: vertical; min-height: 120px; line-height: 1.45; }
-  .tagbox { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 12px; min-height: 54px; cursor: text; }
-  .tagbox input { flex: 1; min-width: 150px; border: none; background: none; outline: none; font-size: 17px; padding: 4px; }
-  .tag {
-    display: inline-flex; align-items: center; gap: 7px; font-size: 15px; font-weight: 500; color: #F1E6FA;
-    padding: 7px 13px; border-radius: 999px; border: .5px solid rgba(210,175,240,.35);
-    background: linear-gradient(145deg, rgba(154,107,191,.45), rgba(120,74,152,.3));
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.2);
-  }
-  .tag svg { width: 9px; height: 9px; opacity: .75; }
-  .danger { width: 100%; height: 52px; border-radius: 999px; border: none; color: var(--danger); font-size: 17px; font-weight: 600; margin-top: 8px; }
+  .add-photos .ic { width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; color: #fff; }
+  .add-photos .ic svg { width: 26px; height: 26px; }
+  .add-photos small { color: var(--label-2); font-size: 13px; font-weight: 400; }
+  .add-photos.over { outline: 2px solid var(--tint); }
+  .pick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 6px; }
+  .pick button { height: 46px; border-radius: 23px; border: none; font-size: 16px; font-weight: 600; color: #fff; display: flex; align-items: center; justify-content: center; gap: 7px; }
+  .pick button svg { width: 19px; height: 19px; }
+  .add-photos { cursor: default; }
+  .strip { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px; }
+  .strip::-webkit-scrollbar { display: none; }
+  .ph { position: relative; flex: none; width: 112px; height: 112px; border-radius: 14px; overflow: hidden; background: var(--bg-3); }
+  .ph img { width: 100%; height: 100%; object-fit: cover; }
+  .ph .x { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 50%; border: none; padding: 0; display: grid; place-items: center; color: #fff; }
+  .ph .x svg { width: 10px; height: 10px; }
+  .ph .cover { position: absolute; left: 6px; bottom: 6px; height: 22px; padding: 0 8px; border-radius: 11px; font-size: 11px; font-weight: 600; display: flex; align-items: center; }
+  .ph .mk { position: absolute; inset: 0; border: none; background: none; }
+  .ph-add { flex: none; width: 112px; height: 112px; border-radius: 14px; border: none; background: var(--bg-3); color: var(--tint); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 13px; font-weight: 600; }
+  .ph-add svg { width: 26px; height: 26px; }
+
+  /* Activos */
+  .tokens { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px 14px; min-height: 52px; cursor: text; }
+  .tokens input { flex: 1; min-width: 140px; border: none; background: none; outline: none; font-size: 17px; padding: 5px 2px; }
+  .tokens input::placeholder { color: var(--label-3); }
+  .token { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 13px; border-radius: 16px; border: none; background: var(--tint-fill); color: #E3D0F5; font-size: 15px; font-weight: 500; }
+  .token svg { width: 9px; height: 9px; opacity: .7; }
 
   /* ---------- Detalle ---------- */
-  #detailSheet { background: linear-gradient(180deg, rgba(28,28,32,.92), rgba(18,18,22,.96)); }
-  .d-head { position: absolute; top: 0; left: 0; right: 0; z-index: 3; display: flex; justify-content: space-between; padding: 14px; pointer-events: none; }
-  .d-head > * { pointer-events: auto; }
-  .pill-btn { height: 44px; padding: 0 18px; border-radius: 999px; border: none; font-size: 16px; font-weight: 600; color: #fff; }
-  .hero { position: relative; }
-  .gallery { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; aspect-ratio: 4 / 5; max-height: 62vh; width: 100%; background: #111; }
+  #detailSheet { background: var(--bg-2); }
+  .d-top { position: absolute; top: 0; left: 0; right: 0; z-index: 4; display: flex; justify-content: space-between; padding: 16px; pointer-events: none; }
+  .d-top > * { pointer-events: auto; }
+  .capsule { height: 44px; padding: 0 18px; border-radius: 22px; border: none; font-size: 17px; font-weight: 600; color: #fff; }
+  .hero { position: relative; background: #000; }
+  .gallery { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; width: 100%; aspect-ratio: 1; max-height: 58vh; }
   .gallery::-webkit-scrollbar { display: none; }
-  .gallery img { flex: none; width: 100%; height: 100%; object-fit: cover; scroll-snap-align: center; cursor: zoom-in; }
-  .gallery .initials { flex: none; width: 100%; font-size: 76px; }
-  .hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 40%; background: linear-gradient(to top, rgba(24,24,28,1), transparent); pointer-events: none; }
-  .dots { position: absolute; bottom: 92px; left: 50%; transform: translateX(-50%); z-index: 2; display: flex; gap: 6px; padding: 7px 10px; border-radius: 999px; }
-  .dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.4); transition: all .25s; }
-  .dots i.on { background: #fff; width: 18px; border-radius: 4px; }
-  .d-title { position: relative; z-index: 2; margin-top: -72px; padding: 0 20px; }
-  .d-title h1 { margin: 0; font-size: 34px; font-weight: 700; letter-spacing: -.03em; line-height: 1.08; text-shadow: 0 2px 16px rgba(0,0,0,.5); }
-  .d-country { margin: 6px 0 0; font-size: 17px; color: rgba(255,255,255,.85); }
-  .d-body { padding: 18px 16px calc(env(safe-area-inset-bottom) + 30px); }
-  .panel { border-radius: 26px; padding: 16px; margin-top: 12px; background: rgba(255,255,255,.06); border: .5px solid rgba(255,255,255,.08); }
-  .panel h4 { margin: 0 0 12px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
-  .d-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-  .d-notes { font-size: 17px; white-space: pre-wrap; word-break: break-word; margin: 0; line-height: 1.5; color: rgba(255,255,255,.92); -webkit-user-select: text; user-select: text; }
+  .gallery img { flex: none; width: 100%; height: 100%; object-fit: cover; scroll-snap-align: center; }
+  .gallery .mono { flex: none; font-size: 72px; }
+  .dots { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); display: flex; gap: 7px; padding: 7px 10px; border-radius: 12px; }
+  .dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.35); transition: background .2s; }
+  .dots i.on { background: #fff; }
+  .d-head { padding: 20px 20px 0; }
+  .d-head h1 { margin: 0; font-size: 28px; line-height: 34px; font-weight: 700; }
+  .d-head p { margin: 4px 0 0; font-size: 17px; color: var(--label-2); }
+  .d-tokens { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px; }
+  .d-notes { margin: 0; padding: 14px 16px; font-size: 17px; line-height: 22px; white-space: pre-wrap; word-break: break-word; }
+  .d-empty { margin: 0; padding: 15px 16px; color: var(--label-3); }
   .d-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .d-photos img, .d-photos button { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 14px; }
-  .d-photos img { cursor: zoom-in; }
-  .d-photos button {
-    border: 1.5px dashed rgba(255,255,255,.2); background: rgba(255,255,255,.03); color: var(--brand-text);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 13px; font-weight: 500;
-  }
+  .d-photos button { border: none; background: var(--bg-3); color: var(--tint); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 13px; font-weight: 600; }
   .d-photos button svg { width: 24px; height: 24px; }
-  .muted { color: var(--ink-3); margin: 0; }
-  .d-date { color: var(--ink-3); font-size: 13px; text-align: center; margin: 22px 0 0; }
+  .d-date { text-align: center; color: var(--label-3); font-size: 13px; margin: 24px 0 0; }
 
-  #lightbox { background: #000; width: 100vw; max-width: none; height: 100vh; height: 100dvh; margin: 0; border-radius: 0; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
+  #lightbox { background: #000; width: 100vw; max-width: none; height: 100vh; height: 100dvh; margin: 0; border-radius: 0; box-shadow: none; }
   #lightbox img { width: 100%; height: 100%; object-fit: contain; }
-  #lightbox .circle { position: absolute; top: calc(env(safe-area-inset-top) + 12px); right: 14px; }
+  #lightbox .round { position: absolute; top: calc(env(safe-area-inset-top) + 10px); right: 16px; }
 
-  /* ---------- Menú y aviso ---------- */
+  /* ---------- Menú contextual y aviso ---------- */
   .menu {
-    position: fixed; z-index: 40; right: 16px; top: calc(env(safe-area-inset-top) + 64px); width: 250px; border-radius: 22px; overflow: hidden;
-    background: linear-gradient(160deg, rgba(70,70,76,.72), rgba(36,36,40,.8)); animation: pop .22s var(--ease); transform-origin: top right;
+    position: fixed; z-index: 40; right: 16px; top: calc(env(safe-area-inset-top) + 60px); width: 250px; border-radius: 22px; overflow: hidden; padding: 6px 0;
+    background: rgba(40,40,44,.72); transform-origin: top right; animation: pop .25s var(--spring);
   }
-  .menu button { display: flex; align-items: center; justify-content: space-between; width: 100%; border: none; background: none; padding: 14px 18px; font-size: 16px; text-align: left; }
-  .menu button + button { border-top: .5px solid var(--line); }
-  .menu button:active { background: rgba(255,255,255,.08); }
-  .menu svg { width: 18px; height: 18px; color: var(--ink-2); }
+  .menu button { display: flex; align-items: center; justify-content: space-between; width: 100%; border: none; background: none; padding: 11px 18px; font-size: 17px; text-align: left; }
+  .menu button:active { background: rgba(255,255,255,.1); }
+  .menu svg { width: 19px; height: 19px; }
   .toast {
-    position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 80px); z-index: 60;
-    padding: 12px 20px; border-radius: 999px; font-size: 15px; font-weight: 600; white-space: nowrap;
-    opacity: 0; transform: translate(-50%, 14px) scale(.95); transition: all .35s var(--ease); pointer-events: none;
+    position: fixed; left: 50%; top: calc(env(safe-area-inset-top) + 10px); z-index: 60; height: 44px; padding: 0 20px; border-radius: 22px;
+    display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; white-space: nowrap;
+    opacity: 0; transform: translate(-50%, -12px) scale(.9); transition: all .4s var(--spring); pointer-events: none;
   }
   .toast.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
 
-  @media (min-width: 720px) { .grid { gap: 20px; } .large { font-size: 44px; } }
-  @media (prefers-reduced-motion: reduce) { *, *::before, ::backdrop { animation: none !important; transition: none !important; } }
+  @media (prefers-reduced-motion: reduce) { *, ::backdrop { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
-<div class="ambient"></div>
 
-<header class="top" id="top">
-  <div class="top-inner">
-    <img class="logo" src="logo.png" alt="in-cosmetics" />
-    <div class="top-title">Proveedores</div>
-    <button class="circle glass press" id="menuBtn" aria-label="Más opciones">
-      <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>
+<header class="nav" id="nav">
+  <div class="nav-row">
+    <img class="logo" src="logo.svg" alt="in-cosmetics" />
+    <div class="nav-title">Proveedores</div>
+    <button class="round glass tap" id="menuBtn" aria-label="Más opciones">
+      <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
     </button>
   </div>
 </header>
 
 <div class="menu glass hidden" id="menu">
-  <button data-act="export">Descargar copia
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 10l5 5 5-5M5 21h14"/></svg></button>
-  <button data-act="import">Restaurar copia
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5M5 21h14"/></svg></button>
   <button data-act="csv">Exportar a Excel
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></button>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></button>
+  <button data-act="export">Descargar copia
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 10l5 5 5-5M5 21h14"/></svg></button>
+  <button data-act="import">Restaurar copia
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5M5 21h14"/></svg></button>
 </div>
 <input type="file" id="importFile" accept="application/json,.json" hidden />
 
 <main>
-  <h1 class="large">Proveedores</h1>
-  <p class="sub" id="lede">Quién trabaja qué, con fotos.</p>
+  <h1 class="large-title">Proveedores</h1>
+  <p class="caption" id="lede"></p>
   <div class="chips" id="chips"></div>
   <section class="grid" id="grid"></section>
-  <div class="empty hidden" id="empty"></div>
+  <div class="unavailable hidden" id="empty"></div>
 </main>
 
 <nav class="dock">
-  <div class="dock-inner">
-    <label class="search glass" id="searchBox">
+  <div class="dock-row">
+    <label class="search glass">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       <input id="q" type="search" placeholder="Buscar" autocomplete="off" enterkeyhint="search" />
     </label>
-    <button class="circle add glass tint press" id="addBtn" aria-label="Nuevo proveedor">
+    <button class="round add glass tap" id="camBtn" aria-label="Sacar foto a un proveedor nuevo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5A1.5 1.5 0 0 1 5 7h2.2l1.6-2.2h6.4L16.8 7H19a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5z"/><circle cx="12" cy="12.8" r="3.4"/></svg>
+    </button>
+    <button class="round add glass tint tap" id="addBtn" aria-label="Nuevo proveedor">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
     </button>
   </div>
@@ -330,46 +286,42 @@
 
 <!-- Formulario -->
 <dialog id="formSheet">
-  <div class="sheet-head">
-    <button class="circle glass press" id="cancelBtn" type="button" aria-label="Cancelar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+  <div class="grabber"></div>
+  <div class="sheet-bar">
+    <button class="round glass tap" id="cancelBtn" type="button" aria-label="Cancelar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
     </button>
     <h2 id="formTitle">Nuevo proveedor</h2>
-    <button class="circle glass tint press" id="saveBtn" type="button" aria-label="Guardar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>
+    <button class="round glass tint tap" id="saveBtn" type="button" aria-label="Guardar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>
     </button>
   </div>
   <div class="scroll">
-    <form class="form" id="form" autocomplete="off" onsubmit="return false">
+    <form class="content" id="form" autocomplete="off" onsubmit="return false">
+      <div class="header" style="margin-top:12px">Fotos</div>
       <div id="photos"></div>
-      <input type="file" id="photoInput" accept="image/*" multiple hidden />
 
-      <div class="field">
-        <label for="f-name">Nombre del proveedor</label>
-        <input class="input name" id="f-name" placeholder="Ej: Química Oriental" />
+      <div class="header">Proveedor</div>
+      <div class="group">
+        <div class="cell name"><input id="f-name" placeholder="Nombre" /></div>
+        <div class="cell"><span class="lead" id="flagLead">🌐</span><input id="f-country" list="countryList" placeholder="País" autocomplete="off" /></div>
+      </div>
+      <datalist id="countryList"></datalist>
+
+      <div class="header">Activos que trabaja</div>
+      <div class="group">
+        <div class="tokens" id="tagBox"><input id="tagInput" list="tagList" placeholder="Agregar activo" enterkeyhint="done" /></div>
+      </div>
+      <datalist id="tagList"></datalist>
+      <div class="footer">Escribí un activo y tocá Intro para agregarlo.</div>
+
+      <div class="header">Notas</div>
+      <div class="group">
+        <div class="cell"><textarea id="f-notes" placeholder="Opcional: contacto, precios, stand…"></textarea></div>
       </div>
 
-      <div class="field">
-        <label for="f-country">País</label>
-        <input class="input" id="f-country" list="countryList" placeholder="Ej: Francia" autocomplete="off" />
-        <datalist id="countryList"></datalist>
-      </div>
-
-      <div class="field">
-        <label for="tagInput">Activos que trabaja</label>
-        <div class="tagbox" id="tagBox">
-          <input id="tagInput" list="tagList" placeholder="Escribí un activo y tocá Enter" enterkeyhint="done" />
-        </div>
-        <datalist id="tagList"></datalist>
-      </div>
-
-      <div class="field">
-        <label for="f-notes">Notas <i>· opcional</i></label>
-        <textarea class="input" id="f-notes" placeholder="Precios, contacto, stand, lo que quieras recordar…"></textarea>
-      </div>
-
-      <div class="field hidden" id="deleteWrap">
-        <button type="button" class="danger glass press" id="deleteBtn">Eliminar proveedor</button>
+      <div class="group hidden" id="deleteWrap" style="margin-top:32px">
+        <button type="button" class="cell btn red" id="deleteBtn">Eliminar proveedor</button>
       </div>
     </form>
   </div>
@@ -377,20 +329,21 @@
 
 <!-- Detalle -->
 <dialog id="detailSheet">
-  <div class="d-head">
-    <button class="circle glass press" id="closeDetail" aria-label="Cerrar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+  <div class="d-top">
+    <button class="round glass tap" id="closeDetail" aria-label="Cerrar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
     </button>
-    <button class="pill-btn glass press" id="editBtn">Editar</button>
+    <button class="capsule glass tap" id="editBtn">Editar</button>
   </div>
   <div class="scroll" id="detail"></div>
 </dialog>
-<input type="file" id="quickPhoto" accept="image/*" multiple hidden />
+<input type="file" id="camIn" accept="image/*" capture="environment" hidden />
+<input type="file" id="libIn" accept="image/*" multiple hidden />
 
 <dialog id="lightbox">
   <img id="lbImg" alt="" />
-  <button class="circle glass press" id="lbClose" aria-label="Cerrar">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+  <button class="round glass tap" id="lbClose" aria-label="Cerrar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
   </button>
 </dialog>
 
@@ -432,9 +385,12 @@
   const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
   const initials = n => (n || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
   const collator = new Intl.Collator('es', { sensitivity: 'base' });
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
   const X_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
-  const CAM_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
-  const PH_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="12" cy="12" r="3"/></svg>';
+  const CAM_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5A1.5 1.5 0 0 1 5 7h2.2l1.6-2.2h6.4L16.8 7H19a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5z"/><circle cx="12" cy="12.8" r="3.4"/></svg>';
+  const LIB_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="m20.5 15.5-4.5-4.5-8 8.5"/></svg>';
+  const STACK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="13" height="13" rx="2.5"/><path d="M4 16V6.5A2.5 2.5 0 0 1 6.5 4H16"/></svg>';
+  const CHECK_ICON = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
 
   const COUNTRIES = {
     'Alemania':'DE','Argentina':'AR','Australia':'AU','Austria':'AT','Bélgica':'BE','Bolivia':'BO','Brasil':'BR','Bulgaria':'BG',
@@ -448,15 +404,15 @@
   };
   const ALIASES = { 'eeuu':'US','usa':'US','ee.uu.':'US','holanda':'NL','uk':'GB','inglaterra':'GB','corea':'KR','uae':'AE','emiratos':'AE' };
   const COUNTRY_BY_NORM = Object.fromEntries(Object.entries(COUNTRIES).map(([n, c]) => [norm(n), c]));
-  const flag = name => {
+  const flagOf = name => {
     const code = COUNTRY_BY_NORM[norm(name)] || ALIASES[norm(name)];
-    return code ? String.fromCodePoint(...[...code].map(ch => 127397 + ch.charCodeAt(0))) + ' ' : '';
+    return code ? String.fromCodePoint(...[...code].map(ch => 127397 + ch.charCodeAt(0))) : '';
   };
-  const countryLabel = p => p.country ? flag(p.country) + p.country : '';
+  const countryLabel = p => p.country ? [flagOf(p.country), p.country].filter(Boolean).join(' ') : '';
 
   function toast(msg) {
-    const t = $('#toast'); t.textContent = msg; t.classList.add('show');
-    clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2200);
+    const t = $('#toast'); t.innerHTML = CHECK_ICON + esc(msg); t.classList.add('show');
+    clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 1900);
   }
 
   function compress(file, max = 1800, q = .84) {
@@ -502,32 +458,29 @@
   function render() {
     const all = tagCounts(), tags = all.slice(0, 14);
     if (view.tag && !tags.some(t => norm(t.label) === norm(view.tag))) view.tag = null;
-    $('#chips').innerHTML = tags.length ? [`<button class="chip glass press ${view.tag ? '' : 'tint'}" data-tag="">Todos</button>`,
-      ...tags.map(t => `<button class="chip glass press ${norm(t.label) === norm(view.tag) ? 'tint' : ''}" data-tag="${esc(t.label)}">${esc(t.label)}</button>`)].join('') : '';
+    $('#chips').innerHTML = tags.length ? [`<button class="chip tap ${view.tag ? '' : 'on'}" data-tag="">Todos</button>`,
+      ...tags.map(t => `<button class="chip tap ${norm(t.label) === norm(view.tag) ? 'on' : ''}" data-tag="${esc(t.label)}">${esc(t.label)}</button>`)].join('') : '';
     $('#chips').classList.toggle('hidden', !tags.length);
-
-    $('#lede').textContent = items.length
-      ? `${items.length} ${items.length === 1 ? 'proveedor' : 'proveedores'} · ${all.length} ${all.length === 1 ? 'activo' : 'activos'}`
-      : 'Quién trabaja qué, con fotos.';
+    $('#lede').textContent = items.length ? `${plural(items.length, 'proveedor', 'proveedores')} · ${plural(all.length, 'activo', 'activos')}` : '';
 
     const list = filtered();
     $('#grid').innerHTML = list.map(p => {
       const photos = p.photos || [], tags = p.tags || [];
-      const line = [countryLabel(p), tags.join(', ')].filter(Boolean).join(' · ');
-      return `<button class="card" data-id="${p.id}">
-        ${photos[0] ? `<img src="${photos[0]}" alt="" loading="lazy" />` : `<div class="initials">${esc(initials(p.name))}</div>`}
-        ${photos.length > 1 ? `<span class="count glass">${PH_ICON}${photos.length}</span>` : ''}
-        <div class="info glass">
-          <h3>${esc(p.name)}</h3>
-          <p class="meta ${line ? '' : 'dim'}">${line ? esc(line) : 'Sin activos cargados'}</p>
+      const sub = [countryLabel(p), tags.join(', ')].filter(Boolean).join(' · ') || 'Sin activos';
+      return `<button class="album" data-id="${p.id}">
+        <div class="thumb">
+          ${photos[0] ? `<img src="${photos[0]}" alt="" loading="lazy" />` : `<div class="mono">${esc(initials(p.name))}</div>`}
+          ${photos.length > 1 ? `<span class="badge glass">${STACK_ICON}${photos.length}</span>` : ''}
         </div>
+        <h3>${esc(p.name)}</h3>
+        <p>${esc(sub)}</p>
       </button>`;
     }).join('');
 
     const empty = $('#empty');
     empty.innerHTML = !items.length
-      ? `<div class="empty-icon glass tint">${CAM_ICON}</div><h2>Empezá por el primero</h2><p>Sacale una foto, poné el nombre, el país y los activos que trabaja. Tocá <b>+</b> abajo.</p>`
-      : `<h2>Sin resultados</h2><p>Nada coincide con “${esc(view.q)}”.</p>`;
+      ? `${CAM_ICON}<h2>Sin proveedores</h2><p>Sacale una foto a cada proveedor y anotá qué activos trabaja.</p><button class="cta glass tint tap" data-act="add">Agregar proveedor</button>`
+      : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><h2>Sin resultados</h2><p>No hay coincidencias para “${esc(view.q || view.tag)}”.</p>`;
     empty.classList.toggle('hidden', list.length > 0);
   }
 
@@ -540,24 +493,23 @@
     $('#detail').innerHTML = `
       <div class="hero">
         <div class="gallery" id="gallery">
-          ${photos.length ? photos.map((s, i) => `<img src="${s}" data-i="${i}" alt="" />`).join('') : `<div class="initials">${esc(initials(p.name))}</div>`}
+          ${photos.length ? photos.map((s, i) => `<img src="${s}" data-i="${i}" alt="" />`).join('') : `<div class="mono" style="width:100%">${esc(initials(p.name))}</div>`}
         </div>
         ${photos.length > 1 ? `<div class="dots glass">${photos.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>` : ''}
       </div>
-      <div class="d-title">
-        <h1>${esc(p.name)}</h1>
-        ${p.country ? `<p class="d-country">${esc(countryLabel(p))}</p>` : ''}
+      <div class="d-head">
+        <h1 class="selectable">${esc(p.name)}</h1>
+        ${p.country ? `<p>${esc(countryLabel(p))}</p>` : ''}
       </div>
-      <div class="d-body">
-        <div class="panel"><h4>Activos que trabaja</h4>
-          ${tags.length ? `<div class="d-tags">${tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>` : '<p class="muted">Todavía no cargaste activos.</p>'}
-        </div>
-        ${p.notes ? `<div class="panel"><h4>Notas</h4><p class="d-notes">${esc(p.notes)}</p></div>` : ''}
-        <div class="panel"><h4>Fotos${photos.length ? ` · ${photos.length}` : ''}</h4>
-          <div class="d-photos">
-            ${photos.map((s, i) => `<img src="${s}" data-i="${i}" alt="" loading="lazy" />`).join('')}
-            <button type="button" id="quickAdd" class="press">${CAM_ICON}Agregar</button>
-          </div>
+      <div class="content">
+        <div class="header">Activos que trabaja</div>
+        <div class="group">${tags.length ? `<div class="d-tokens">${tags.map(t => `<span class="token">${esc(t)}</span>`).join('')}</div>` : '<p class="d-empty">Sin activos cargados</p>'}</div>
+        ${p.notes ? `<div class="header">Notas</div><div class="group"><p class="d-notes selectable">${esc(p.notes)}</p></div>` : ''}
+        <div class="header">${photos.length ? plural(photos.length, 'foto', 'fotos') : 'Fotos'}</div>
+        <div class="d-photos">
+          ${photos.map((s, i) => `<img src="${s}" data-i="${i}" alt="" loading="lazy" />`).join('')}
+          <button type="button" data-pick="cam">${CAM_ICON}Cámara</button>
+          <button type="button" data-pick="lib">${LIB_ICON}Fototeca</button>
         </div>
         <p class="d-date">Actualizado el ${date}</p>
       </div>`;
@@ -572,20 +524,34 @@
   }
 
   $('#detail').onclick = e => {
-    if (e.target.closest('#quickAdd')) return $('#quickPhoto').click();
+    const pk = e.target.closest('[data-pick]');
+    if (pk) return pickPhotos('detail', pk.dataset.pick);
     const img = e.target.closest('img[data-i]');
     if (img) { $('#lbImg').src = img.src; $('#lightbox').showModal(); }
   };
-  $('#quickPhoto').onchange = async e => {
+  // ---------- Cámara y fototeca ----------
+  let pickTarget = 'form';
+  function pickPhotos(target, source) { pickTarget = target; $(source === 'cam' ? '#camIn' : '#libIn').click(); }
+  for (const id of ['#camIn', '#libIn']) $(id).onchange = e => {
     const files = [...e.target.files]; e.target.value = '';
-    const p = items.find(x => x.id === currentId); if (!p || !files.length) return;
-    toast('Agregando fotos…');
+    if (!files.length) return;
+    if (pickTarget === 'form') addFormPhotos(files);
+    else if (pickTarget === 'detail') addDetailPhotos(files);
+    else newWithPhotos(files);
+  };
+  async function newWithPhotos(files) {
+    const photos = await readPhotos(files); if (!photos.length) return;
+    openForm(); editing.photos = photos; renderPhotos();
+    setTimeout(() => $('#f-name').focus(), 450);
+  }
+  async function addDetailPhotos(files) {
+    const p = items.find(x => x.id === currentId); if (!p) return;
     const added = await readPhotos(files); if (!added.length) return;
     const next = { ...p, photos: [...(p.photos || []), ...added], updatedAt: Date.now() };
     try { await dbPut(next); } catch { return toast('No hay espacio para guardar'); }
     items[items.indexOf(p)] = next; render(); openDetail(p.id);
     toast(added.length === 1 ? 'Foto agregada' : `${added.length} fotos agregadas`);
-  };
+  }
 
   // ---------- Formulario ----------
   function openForm(p) {
@@ -600,7 +566,7 @@
     $('#tagInput').value = '';
     $('#tagList').innerHTML = tagCounts().map(t => `<option value="${esc(t.label)}">`).join('');
     $('#countryList').innerHTML = [...new Set([...items.map(x => x.country).filter(Boolean), ...Object.keys(COUNTRIES)])].map(c => `<option value="${esc(c)}">`).join('');
-    renderPhotos(); renderTags(); updateSave();
+    renderPhotos(); renderTags(); updateSave(); updateFlag();
     const sheet = $('#formSheet');
     if (!sheet.open) sheet.showModal();
     sheet.querySelector('.scroll').scrollTop = 0;
@@ -609,25 +575,26 @@
   function renderPhotos() {
     const ph = editing.photos;
     $('#photos').innerHTML = !ph.length
-      ? `<button type="button" class="dropzone press" id="drop"><span class="cam glass tint">${CAM_ICON}</span><b>Agregar fotos</b><small>Sacá una foto o elegila de la galería</small></button>`
-      : `<div class="thumbs">${ph.map((s, i) => `
-          <div class="thumb"><img src="${s}" alt="" />
-            ${i ? `<button type="button" class="mk" data-cover="${i}" aria-label="Usar como portada"></button>` : '<span class="cover-tag glass">Portada</span>'}
-            <button type="button" class="rm glass" data-rm="${i}" aria-label="Quitar foto">${X_ICON}</button>
+      ? `<div class="add-photos" id="drop"><span class="ic glass tint">${CAM_ICON}</span>Fotos del proveedor<small>Del stand, los productos o la tarjeta</small>
+          <div class="pick"><button type="button" class="glass tint tap" data-pick="cam">${CAM_ICON}Cámara</button><button type="button" class="glass tap" data-pick="lib">${LIB_ICON}Fototeca</button></div></div>`
+      : `<div class="strip">${ph.map((s, i) => `
+          <div class="ph"><img src="${s}" alt="" />
+            ${i ? `<button type="button" class="mk" data-cover="${i}" aria-label="Usar como portada"></button>` : '<span class="cover glass">Portada</span>'}
+            <button type="button" class="x glass" data-rm="${i}" aria-label="Quitar foto">${X_ICON}</button>
           </div>`).join('')}
-          <button type="button" class="thumb-add press" id="drop">${CAM_ICON}Agregar</button>
-        </div><p class="hint">Tocá una foto para hacerla portada.</p>`;
+          <button type="button" class="ph-add tap" id="drop" data-pick="cam">${CAM_ICON}Cámara</button>
+          <button type="button" class="ph-add tap" data-pick="lib">${LIB_ICON}Fototeca</button>
+        </div><div class="footer">Tocá una foto para usarla de portada.</div>`;
   }
   function renderTags() {
     const box = $('#tagBox'), input = $('#tagInput');
-    box.querySelectorAll('.tag').forEach(t => t.remove());
+    box.querySelectorAll('.token').forEach(t => t.remove());
     editing.tags.forEach((t, i) => {
       const b = document.createElement('button');
-      b.type = 'button'; b.className = 'tag'; b.dataset.i = i; b.innerHTML = esc(t) + X_ICON;
+      b.type = 'button'; b.className = 'token'; b.dataset.i = i; b.innerHTML = esc(t) + X_ICON;
       b.setAttribute('aria-label', `Quitar ${t}`);
       box.insertBefore(b, input);
     });
-    input.placeholder = editing.tags.length ? 'Agregar otro' : 'Escribí un activo y tocá Enter';
   }
   function addTag(raw) {
     raw.split(/[,;\n]/).map(s => s.trim()).filter(Boolean).forEach(t => {
@@ -636,6 +603,7 @@
     renderTags();
   }
   function updateSave() { $('#saveBtn').disabled = !$('#f-name').value.trim(); }
+  function updateFlag() { $('#flagLead').textContent = flagOf($('#f-country').value) || '🌐'; }
 
   async function save() {
     const name = $('#f-name').value.trim();
@@ -656,7 +624,6 @@
 
   async function addFormPhotos(files) {
     if (!files.length) return;
-    toast(files.length > 1 ? `Procesando ${files.length} fotos…` : 'Procesando foto…');
     editing.photos.push(...await readPhotos(files)); renderPhotos();
   }
 
@@ -670,7 +637,7 @@
   const today = () => new Date().toISOString().slice(0, 10);
   function exportJSON() {
     if (!items.length) return toast('Todavía no hay proveedores');
-    download(`proveedores-${today()}.json`, JSON.stringify({ app: 'inncosmetic-proveedores', version: 3, exportedAt: new Date().toISOString(), items }), 'application/json');
+    download(`proveedores-${today()}.json`, JSON.stringify({ app: 'inncosmetic-proveedores', version: 4, exportedAt: new Date().toISOString(), items }), 'application/json');
     toast('Copia descargada');
   }
   function exportCSV() {
@@ -695,17 +662,51 @@
         if (i >= 0) items[i] = item; else items.push(item);
         n++;
       }
-      render(); toast(`${n} ${n === 1 ? 'proveedor restaurado' : 'proveedores restaurados'}`);
+      render(); toast(`${plural(n, 'proveedor restaurado', 'proveedores restaurados')}`);
     } catch { toast('Ese archivo no es una copia válida'); }
   }
 
+  // ---------- Deslizar hacia abajo para cerrar (como en iOS) ----------
+  function swipeToClose(d) {
+    const sc = d.querySelector('.scroll');
+    let y0 = null, dy = 0, drag = false;
+    d.addEventListener('touchstart', e => {
+      if (e.target.closest('input, textarea, .strip') || matchMedia('(min-width: 720px)').matches) { y0 = null; return; }
+      y0 = e.touches[0].clientY; dy = 0; drag = false;
+    }, { passive: true });
+    d.addEventListener('touchmove', e => {
+      if (y0 === null) return;
+      const m = e.touches[0].clientY - y0;
+      if (!drag) {
+        if (m > 8 && sc.scrollTop <= 0) { drag = true; d.style.transition = 'none'; }
+        else if (Math.abs(m) > 8) { y0 = null; return; }
+      }
+      if (drag) { dy = Math.max(0, m); d.style.transform = `translateY(${dy}px)`; e.preventDefault(); }
+    }, { passive: false });
+    d.addEventListener('touchend', () => {
+      if (!drag) { y0 = null; return; }
+      d.style.transition = 'transform .32s cubic-bezier(.2,.9,.25,1)';
+      if (dy > 120) {
+        d.style.transform = 'translateY(110%)';
+        setTimeout(() => { d.close(); d.style.transform = ''; d.style.transition = ''; }, 300);
+      } else {
+        d.style.transform = '';
+        setTimeout(() => { d.style.transition = ''; }, 320);
+      }
+      y0 = null; drag = false;
+    });
+  }
+  swipeToClose($('#formSheet')); swipeToClose($('#detailSheet'));
+
   // ---------- Eventos ----------
   $('#addBtn').onclick = () => openForm();
+  $('#camBtn').onclick = () => pickPhotos('new', 'cam');
+  $('#empty').onclick = e => { if (e.target.closest('[data-act="add"]')) openForm(); };
   $('#q').oninput = e => { view.q = e.target.value; render(); };
   $('#q').onkeydown = e => { if (e.key === 'Enter') e.target.blur(); };
   $('#chips').onclick = e => { const b = e.target.closest('[data-tag]'); if (b) { view.tag = b.dataset.tag || null; render(); } };
-  $('#grid').onclick = e => { const c = e.target.closest('.card'); if (c) openDetail(c.dataset.id); };
-  addEventListener('scroll', () => $('#top').classList.toggle('scrolled', scrollY > 40), { passive: true });
+  $('#grid').onclick = e => { const c = e.target.closest('.album'); if (c) openDetail(c.dataset.id); };
+  addEventListener('scroll', () => $('#nav').classList.toggle('scrolled', scrollY > 44), { passive: true });
 
   const menu = $('#menu');
   $('#menuBtn').onclick = e => { e.stopPropagation(); menu.classList.toggle('hidden'); };
@@ -720,16 +721,17 @@
   $('#cancelBtn').onclick = () => $('#formSheet').close();
   $('#saveBtn').onclick = save;
   $('#f-name').oninput = updateSave;
+  $('#f-country').oninput = updateFlag;
   $('#f-name').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); $('#f-country').focus(); } };
   $('#f-country').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); $('#tagInput').focus(); } };
 
   $('#photos').onclick = e => {
-    if (e.target.closest('#drop')) return $('#photoInput').click();
+    const pk = e.target.closest('[data-pick]');
+    if (pk) return pickPhotos('form', pk.dataset.pick);
     const rm = e.target.closest('[data-rm]'), cv = e.target.closest('[data-cover]');
     if (rm) { editing.photos.splice(+rm.dataset.rm, 1); renderPhotos(); }
     else if (cv) { const [p] = editing.photos.splice(+cv.dataset.cover, 1); editing.photos.unshift(p); renderPhotos(); }
   };
-  $('#photoInput').onchange = e => { const f = [...e.target.files]; e.target.value = ''; addFormPhotos(f); };
   const form = $('#form');
   form.addEventListener('dragover', e => { e.preventDefault(); $('#drop')?.classList.add('over'); });
   form.addEventListener('dragleave', e => { if (!form.contains(e.relatedTarget)) $('#drop')?.classList.remove('over'); });
@@ -743,7 +745,7 @@
   };
   $('#tagInput').oninput = e => { if (/[,;]/.test(e.target.value)) { addTag(e.target.value); e.target.value = ''; } };
   $('#tagBox').onclick = e => {
-    const t = e.target.closest('.tag');
+    const t = e.target.closest('.token');
     if (t) { editing.tags.splice(+t.dataset.i, 1); renderTags(); }
     $('#tagInput').focus();
   };

@@ -1,0 +1,13 @@
+{
+	admin off
+	persist_config off
+	auto_https off
+}
+
+:{$PORT:8080} {
+	root * /srv
+	encode gzip
+	# Siempre revisar si hay una versión nueva (evita ver una versión vieja guardada en el teléfono)
+	header Cache-Control "no-cache"
+	file_server
+}
