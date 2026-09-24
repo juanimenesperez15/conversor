@@ -7,32 +7,35 @@
 <meta name="apple-mobile-web-app-title" content="Proveedores" />
 <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
-<title>Proveedores Inncosmetic</title>
+<title>Proveedores in-cosmetics</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Cabin:wght@500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
-  /* Paleta Inncosmetic: cambiar acá para ajustar la marca */
+  /* Paleta in-cosmetics (tomada de in-cosmetics.com): cambiar acá para ajustar la marca */
   :root {
-    --gold: #C9975A;
-    --gold-ink: #9C6E34;
-    --gold-tint: #F6EEE3;
+    --brand: #784A98;
+    --brand-ink: #5E3A77;
+    --brand-tint: #F2EDF5;
+    --brand-soft: #D9C9E5;
     --bg: #FFFFFF;
     --surface: #F5F5F7;
     --surface-2: #E8E8ED;
     --line: #D2D2D7;
-    --ink: #1D1D1F;
+    --ink: #2D2D2D;
     --ink-2: #6E6E73;
     --ink-3: #A1A1A6;
     --glass: rgba(255,255,255,.78);
     --shadow-lg: 0 30px 80px rgba(0,0,0,.18);
-    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Helvetica Neue", Arial, sans-serif;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Open Sans", "Helvetica Neue", Arial, sans-serif;
+    --display: "Cabin", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --gold: #D6A461;
-      --gold-ink: #E0B57C;
-      --gold-tint: rgba(214,164,97,.16);
+      --brand: #A180B7;
+      --brand-ink: #D9C9E5;
+      --brand-tint: rgba(120,74,152,.24);
+      --brand-soft: #5E3A77;
       --bg: #000000;
       --surface: #1C1C1E;
       --surface-2: #2C2C2E;
@@ -67,8 +70,8 @@
   }
   .nav.scrolled { border-bottom-color: var(--line); }
   .nav-inner { max-width: 1120px; margin: 0 auto; height: 52px; display: flex; align-items: center; justify-content: space-between; }
-  .wordmark { font-size: 17px; font-weight: 600; letter-spacing: -.02em; }
-  .wordmark b { color: var(--gold); font-weight: 600; }
+  .wordmark { font-family: var(--display); font-size: 20px; font-weight: 600; letter-spacing: -.01em; color: var(--brand); }
+  .wordmark span { font-family: var(--font); font-size: 13px; font-weight: 500; color: var(--ink-2); margin-left: 8px; letter-spacing: 0; }
   .nav-title { font-size: 15px; font-weight: 600; opacity: 0; transition: opacity .2s; position: absolute; left: 50%; transform: translateX(-50%); }
   .nav.scrolled .nav-title { opacity: 1; }
   .ghost {
@@ -79,8 +82,8 @@
   .ghost svg { width: 20px; height: 20px; }
 
   main { max-width: 1120px; margin: 0 auto; padding: 28px 20px calc(env(safe-area-inset-bottom) + 120px); }
-  .hero h1 { font-size: clamp(40px, 7vw, 64px); font-weight: 700; letter-spacing: -.035em; line-height: 1.02; margin: 0; }
-  .hero h1 span { color: var(--gold); }
+  .hero h1 { font-family: var(--display); font-size: clamp(40px, 7vw, 64px); font-weight: 700; letter-spacing: -.025em; line-height: 1.02; margin: 0; }
+  .hero h1 span { color: var(--brand); }
   .hero p { color: var(--ink-2); font-size: clamp(17px, 2.2vw, 21px); margin: 10px 0 0; letter-spacing: -.015em; }
 
   .search {
@@ -98,7 +101,7 @@
     font-size: 14px; font-weight: 500; white-space: nowrap; color: var(--ink); transition: all .15s;
   }
   .pill:hover { border-color: var(--ink-3); }
-  .pill.on { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+  .pill.on { background: var(--brand); border-color: var(--brand); color: #fff; }
 
   /* ---------- Galería de proveedores ---------- */
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr)); gap: 36px 22px; margin-top: 32px; }
@@ -118,35 +121,37 @@
   .card-img .n svg { width: 12px; height: 12px; }
   .initials {
     width: 100%; height: 100%; display: grid; place-items: center;
-    background: linear-gradient(160deg, var(--gold-tint), var(--surface) 70%);
-    color: var(--gold-ink); font-size: 44px; font-weight: 600; letter-spacing: -.03em;
+    background: linear-gradient(160deg, var(--brand-tint), var(--surface) 70%);
+    color: var(--brand-ink); font-size: 44px; font-weight: 600; letter-spacing: -.03em;
   }
-  .card h3 { font-size: 19px; font-weight: 600; letter-spacing: -.02em; margin: 14px 2px 3px; }
+  .card h3 { font-family: var(--display); font-size: 19px; font-weight: 600; letter-spacing: -.02em; margin: 14px 2px 3px; }
   .card p { font-size: 14px; color: var(--ink-2); margin: 0 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .card p.none { color: var(--ink-3); }
+  .card .country { color: var(--ink); font-weight: 500; margin-bottom: 2px; }
+  .d-country { font-size: 19px; color: var(--ink); margin: 8px 0 0; font-weight: 500; }
 
   .empty { text-align: center; padding: 72px 20px 20px; }
   .empty-art {
     width: 96px; height: 96px; border-radius: 28px; margin: 0 auto 22px; display: grid; place-items: center;
-    background: var(--gold-tint); color: var(--gold-ink);
+    background: var(--brand-tint); color: var(--brand-ink);
   }
   .empty-art svg { width: 44px; height: 44px; }
-  .empty h2 { font-size: 28px; letter-spacing: -.03em; margin: 0 0 8px; }
+  .empty h2 { font-family: var(--display); font-size: 28px; letter-spacing: -.03em; margin: 0 0 8px; }
   .empty p { color: var(--ink-2); margin: 0 auto; max-width: 360px; }
 
   /* ---------- Botón flotante ---------- */
   .fab {
     position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 22px); transform: translateX(-50%); z-index: 30;
-    border: none; background: var(--ink); color: var(--bg); height: 54px; padding: 0 26px 0 20px; border-radius: 999px;
+    border: none; background: var(--brand); color: #fff; height: 54px; padding: 0 26px 0 20px; border-radius: 999px;
     font-size: 17px; font-weight: 600; display: flex; align-items: center; gap: 8px; white-space: nowrap;
-    box-shadow: 0 10px 30px rgba(0,0,0,.25); transition: transform .2s;
+    box-shadow: 0 10px 30px rgba(120,74,152,.4); transition: transform .2s;
   }
   .fab:active { transform: translateX(-50%) scale(.96); }
-  .fab svg { width: 20px; height: 20px; color: var(--gold); }
+  .fab svg { width: 20px; height: 20px; }
 
   .btn {
     border: none; border-radius: 999px; padding: 13px 24px; font-size: 17px; font-weight: 600;
-    background: var(--gold); color: #fff; display: inline-flex; align-items: center; gap: 6px;
+    background: var(--brand); color: #fff; display: inline-flex; align-items: center; gap: 6px;
   }
   .btn:active { opacity: .8; }
   .btn.danger { background: none; color: #FF3B30; width: 100%; justify-content: center; }
@@ -172,7 +177,7 @@
   }
   @media (min-width: 720px) { .bar { padding-top: 14px; } }
   .bar h2 { margin: 0; font-size: 17px; font-weight: 600; }
-  .txt { border: none; background: none; color: var(--gold-ink); font-size: 17px; padding: 6px 0; justify-self: start; }
+  .txt { border: none; background: none; color: var(--brand-ink); font-size: 17px; padding: 6px 0; justify-self: start; }
   .txt.end { justify-self: end; font-weight: 600; }
   .txt:disabled { color: var(--ink-3); }
   .scroll { overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
@@ -184,10 +189,10 @@
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--ink-2);
     transition: all .2s;
   }
-  .dropzone.over { border-color: var(--gold); background: var(--gold-tint); }
+  .dropzone.over { border-color: var(--brand); background: var(--brand-tint); }
   .dropzone .cam {
-    width: 60px; height: 60px; border-radius: 50%; background: var(--gold); color: #fff; display: grid; place-items: center;
-    box-shadow: 0 8px 20px rgba(201,151,90,.35);
+    width: 60px; height: 60px; border-radius: 50%; background: var(--brand); color: #fff; display: grid; place-items: center;
+    box-shadow: 0 8px 20px rgba(120,74,152,.35);
   }
   .dropzone .cam svg { width: 28px; height: 28px; }
   .dropzone b { color: var(--ink); font-size: 17px; font-weight: 600; }
@@ -209,7 +214,7 @@
   .thumb .mk { position: absolute; inset: 0; border: none; background: none; }
   .thumb-add {
     flex: none; width: 128px; aspect-ratio: 4 / 5; border-radius: 14px; border: 1.5px dashed var(--line); background: none;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--gold-ink); font-size: 14px; font-weight: 500;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--brand-ink); font-size: 14px; font-weight: 500;
   }
   .thumb-add svg { width: 26px; height: 26px; }
   .hint { font-size: 13px; color: var(--ink-3); margin: 8px 2px 0; }
@@ -221,7 +226,7 @@
     width: 100%; border: 1px solid transparent; background: var(--surface); border-radius: 14px;
     padding: 14px 16px; font-size: 17px; outline: none; transition: border-color .15s, background .15s;
   }
-  .input:focus, .tagbox:focus-within { border-color: var(--gold); background: var(--bg); }
+  .input:focus, .tagbox:focus-within { border-color: var(--brand); background: var(--bg); }
   .input.name { font-size: 22px; font-weight: 600; letter-spacing: -.02em; }
   .input::placeholder { color: var(--ink-3); font-weight: 400; }
   textarea.input { resize: vertical; min-height: 120px; line-height: 1.45; }
@@ -233,7 +238,7 @@
   .tagbox input::placeholder { color: var(--ink-3); }
   .tag {
     display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 500;
-    padding: 6px 12px; border-radius: 999px; background: var(--gold-tint); color: var(--gold-ink); border: none;
+    padding: 6px 12px; border-radius: 999px; background: var(--brand-tint); color: var(--brand-ink); border: none;
   }
   .tag svg { width: 10px; height: 10px; opacity: .7; }
 
@@ -256,7 +261,7 @@
   .dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.5); transition: background .2s; }
   .dots i.on { background: #fff; }
   .d-body { padding: 24px 20px calc(env(safe-area-inset-bottom) + 36px); }
-  .d-body h1 { font-size: 34px; font-weight: 700; letter-spacing: -.03em; line-height: 1.08; margin: 0; }
+  .d-body h1 { font-family: var(--display); font-size: 34px; font-weight: 700; letter-spacing: -.03em; line-height: 1.08; margin: 0; }
   .d-date { color: var(--ink-3); font-size: 14px; margin: 6px 0 0; }
   .d-sec { margin-top: 30px; }
   .d-sec h4 { font-size: 13px; font-weight: 600; color: var(--ink-2); margin: 0 0 12px; text-transform: uppercase; letter-spacing: .04em; }
@@ -265,7 +270,7 @@
   .d-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .d-photos img, .d-photos button { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 12px; cursor: zoom-in; }
   .d-photos button {
-    border: 1.5px dashed var(--line); background: none; color: var(--gold-ink); cursor: pointer;
+    border: 1.5px dashed var(--line); background: none; color: var(--brand-ink); cursor: pointer;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 13px; font-weight: 500;
   }
   .d-photos button svg { width: 24px; height: 24px; }
@@ -305,7 +310,7 @@
 
 <header class="nav" id="nav">
   <div class="nav-inner">
-    <div class="wordmark"><b>inn</b>cosmetic</div>
+    <div class="wordmark">in-cosmetics<span>Proveedores</span></div>
     <div class="nav-title">Proveedores</div>
     <button class="ghost" id="menuBtn" aria-label="Más opciones">
       <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
@@ -328,7 +333,7 @@
 
   <label class="search" id="searchBox">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-    <input id="q" type="search" placeholder="Buscar proveedor o activo" autocomplete="off" />
+    <input id="q" type="search" placeholder="Buscar proveedor, país o activo" autocomplete="off" />
   </label>
   <div class="filters" id="filters"></div>
 
@@ -356,6 +361,12 @@
       <div class="field">
         <label for="f-name">Nombre del proveedor</label>
         <input class="input name" id="f-name" placeholder="Ej: Química Oriental" />
+      </div>
+
+      <div class="field">
+        <label for="f-country">País</label>
+        <input class="input" id="f-country" list="countryList" placeholder="Ej: Francia" autocomplete="off" />
+        <datalist id="countryList"></datalist>
       </div>
 
       <div class="field">
@@ -439,6 +450,24 @@
   const CAM_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
   const PH_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="12" cy="12" r="3"/></svg>';
 
+  const COUNTRIES = {
+    'Alemania':'DE','Argentina':'AR','Australia':'AU','Austria':'AT','Bélgica':'BE','Bolivia':'BO','Brasil':'BR','Bulgaria':'BG',
+    'Canadá':'CA','Chile':'CL','China':'CN','Colombia':'CO','Corea del Sur':'KR','Costa Rica':'CR','Croacia':'HR','Dinamarca':'DK',
+    'Ecuador':'EC','Egipto':'EG','Emiratos Árabes Unidos':'AE','Eslovenia':'SI','España':'ES','Estados Unidos':'US','Filipinas':'PH',
+    'Finlandia':'FI','Francia':'FR','Grecia':'GR','Guatemala':'GT','Hungría':'HU','India':'IN','Indonesia':'ID','Irlanda':'IE',
+    'Israel':'IL','Italia':'IT','Japón':'JP','Malasia':'MY','Marruecos':'MA','México':'MX','Noruega':'NO','Nueva Zelanda':'NZ',
+    'Países Bajos':'NL','Paraguay':'PY','Perú':'PE','Polonia':'PL','Portugal':'PT','Reino Unido':'GB','República Checa':'CZ',
+    'Rumania':'RO','Singapur':'SG','Sudáfrica':'ZA','Suecia':'SE','Suiza':'CH','Tailandia':'TH','Taiwán':'TW','Turquía':'TR',
+    'Ucrania':'UA','Uruguay':'UY','Venezuela':'VE','Vietnam':'VN'
+  };
+  const ALIASES = { 'eeuu':'US','usa':'US','ee.uu.':'US','holanda':'NL','uk':'GB','inglaterra':'GB','corea':'KR','uae':'AE','emiratos':'AE' };
+  const COUNTRY_BY_NORM = Object.fromEntries(Object.entries(COUNTRIES).map(([n, c]) => [norm(n), c]));
+  const flag = name => {
+    const code = COUNTRY_BY_NORM[norm(name)] || ALIASES[norm(name)];
+    return code ? String.fromCodePoint(...[...code].map(ch => 127397 + ch.charCodeAt(0))) + ' ' : '';
+  };
+  const countryLabel = p => p.country ? flag(p.country) + p.country : '';
+
   function toast(msg) {
     const t = $('#toast'); t.textContent = msg; t.classList.add('show');
     clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2200);
@@ -480,7 +509,7 @@
     const q = norm(view.q);
     return items
       .filter(p => !view.tag || (p.tags || []).some(t => norm(t) === norm(view.tag)))
-      .filter(p => !q || norm([p.name, (p.tags || []).join(' '), p.notes].join(' ')).includes(q))
+      .filter(p => !q || norm([p.name, p.country, (p.tags || []).join(' '), p.notes].join(' ')).includes(q))
       .sort((a, b) => collator.compare(a.name, b.name));
   }
 
@@ -504,13 +533,14 @@
           ${photos.length > 1 ? `<span class="n">${PH_ICON}${photos.length}</span>` : ''}
         </div>
         <h3>${esc(p.name)}</h3>
+        ${p.country ? `<p class="country">${esc(countryLabel(p))}</p>` : ''}
         <p class="${tags.length ? '' : 'none'}">${tags.length ? esc(tags.join(' · ')) : 'Sin activos cargados'}</p>
       </button>`;
     }).join('');
 
     const empty = $('#empty');
     empty.innerHTML = !items.length
-      ? `<div class="empty-art">${CAM_ICON}</div><h2>Empezá por el primero.</h2><p>Sacale una foto, poné el nombre y los activos que trabaja. Nada más.</p>`
+      ? `<div class="empty-art">${CAM_ICON}</div><h2>Empezá por el primero.</h2><p>Sacale una foto, poné el nombre, el país y los activos que trabaja. Nada más.</p>`
       : `<h2>Sin resultados.</h2><p>Nada coincide con “${esc(view.q)}”.</p>`;
     empty.classList.toggle('hidden', list.length > 0);
   }
@@ -530,6 +560,7 @@
       </div>
       <div class="d-body">
         <h1>${esc(p.name)}</h1>
+        ${p.country ? `<p class="d-country">${esc(countryLabel(p))}</p>` : ''}
         <p class="d-date">Actualizado el ${date}</p>
         <div class="d-sec"><h4>Activos que trabaja</h4>
           ${tags.length ? `<div class="d-tags">${tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>` : '<p class="muted">Todavía no cargaste activos.</p>'}
@@ -571,12 +602,14 @@
   // ---------- Formulario ----------
   function openForm(p) {
     const isNew = !p;
-    editing = structuredClone(p || { id: uid(), name: '', tags: [], notes: '', photos: [] });
+    editing = structuredClone(p || { id: uid(), name: '', country: '', tags: [], notes: '', photos: [] });
     editing.tags = editing.tags || []; editing.photos = editing.photos || [];
     $('#formTitle').textContent = isNew ? 'Nuevo proveedor' : 'Editar';
     $('#deleteWrap').classList.toggle('hidden', isNew);
     $('#f-name').value = editing.name || '';
     $('#f-notes').value = editing.notes || '';
+    $('#f-country').value = editing.country || '';
+    $('#countryList').innerHTML = [...new Set([...items.map(x => x.country).filter(Boolean), ...Object.keys(COUNTRIES)])].map(c => `<option value="${esc(c)}">`).join('');
     $('#tagInput').value = '';
     $('#tagList').innerHTML = tagCounts().map(t => `<option value="${esc(t.label)}">`).join('');
     renderPhotos(); renderTags(); updateSave();
@@ -622,6 +655,7 @@
     if ($('#tagInput').value.trim()) addTag($('#tagInput').value);
     editing.name = name;
     editing.notes = $('#f-notes').value.trim();
+    editing.country = $('#f-country').value.trim();
     const now = Date.now();
     editing.createdAt = editing.createdAt || now; editing.updatedAt = now;
     try { await dbPut(editing); } catch { return toast('No hay espacio para guardar'); }
@@ -654,8 +688,8 @@
   function exportCSV() {
     if (!items.length) return toast('Todavía no hay proveedores');
     const cell = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-    const rows = [['Proveedor', 'Activos', 'Notas', 'Fotos'].map(cell).join(';'),
-      ...filtered().map(p => [p.name, (p.tags || []).join(', '), p.notes, (p.photos || []).length].map(cell).join(';'))];
+    const rows = [['Proveedor', 'País', 'Activos', 'Notas', 'Fotos'].map(cell).join(';'),
+      ...filtered().map(p => [p.name, p.country, (p.tags || []).join(', '), p.notes, (p.photos || []).length].map(cell).join(';'))];
     download(`proveedores-inncosmetic-${today()}.csv`, '﻿' + rows.join('\r\n'), 'text/csv;charset=utf-8');
     toast('Planilla descargada');
   }
@@ -697,7 +731,8 @@
   $('#cancelBtn').onclick = () => $('#formSheet').close();
   $('#saveBtn').onclick = save;
   $('#f-name').oninput = updateSave;
-  $('#f-name').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); $('#tagInput').focus(); } };
+  $('#f-name').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); $('#f-country').focus(); } };
+  $('#f-country').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); $('#tagInput').focus(); } };
 
   $('#photos').onclick = e => {
     if (e.target.closest('#drop')) return $('#photoInput').click();
