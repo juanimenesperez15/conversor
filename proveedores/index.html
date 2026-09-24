@@ -223,7 +223,7 @@
 
   /* ---------- Menú contextual y aviso ---------- */
   .menu {
-    position: fixed; z-index: 40; right: 16px; top: calc(env(safe-area-inset-top) + 60px); width: 250px; border-radius: 22px; overflow: hidden; padding: 6px 0;
+    position: fixed; z-index: 40; right: 16px; top: calc(env(safe-area-inset-top) + 60px); width: 280px; border-radius: 22px; overflow: hidden; padding: 6px 0;
     background: rgba(40,40,44,.72); transform-origin: top right; animation: pop .25s var(--spring);
   }
   .menu button { display: flex; align-items: center; justify-content: space-between; width: 100%; border: none; background: none; padding: 11px 18px; font-size: 17px; text-align: left; }
@@ -252,7 +252,7 @@
 </header>
 
 <div class="menu glass hidden" id="menu">
-  <button data-act="csv">Exportar a Excel
+  <button data-act="xlsx">Exportar a Excel (con fotos)
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></button>
   <button data-act="export">Descargar copia
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 10l5 5 5-5M5 21h14"/></svg></button>
@@ -637,16 +637,87 @@
   const today = () => new Date().toISOString().slice(0, 10);
   function exportJSON() {
     if (!items.length) return toast('Todavía no hay proveedores');
-    download(`proveedores-${today()}.json`, JSON.stringify({ app: 'inncosmetic-proveedores', version: 4, exportedAt: new Date().toISOString(), items }), 'application/json');
+    shareOrDownload(`proveedores-${today()}.json`, new Blob([JSON.stringify({ app: 'inncosmetic-proveedores', version: 4, exportedAt: new Date().toISOString(), items })], { type: 'application/json' }));
     toast('Copia descargada');
   }
-  function exportCSV() {
+  // Excel (.xlsx) con las fotos dentro de las celdas. ExcelJS se carga solo al exportar.
+  let excelLib = null;
+  function loadExcel() {
+    return excelLib || (excelLib = new Promise((res, rej) => {
+      const sc = document.createElement('script');
+      sc.src = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
+      sc.onload = () => res(window.ExcelJS);
+      sc.onerror = () => { excelLib = null; rej(new Error('sin conexión')); };
+      document.head.appendChild(sc);
+    }));
+  }
+  function squareThumb(src, size = 360) {
+    return new Promise(res => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas'); c.width = c.height = size;
+        const k = Math.min(img.naturalWidth, img.naturalHeight);
+        c.getContext('2d').drawImage(img, (img.naturalWidth - k) / 2, (img.naturalHeight - k) / 2, k, k, 0, 0, size, size);
+        res(c.toDataURL('image/jpeg', .82));
+      };
+      img.onerror = () => res(null);
+      img.src = src;
+    });
+  }
+  async function shareOrDownload(name, blob) {
+    const file = new File([blob], name, { type: blob.type });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: name }); return; }
+      catch (err) { if (err && err.name === 'AbortError') return; }
+    }
+    download(name, blob, blob.type);
+  }
+  async function exportXLSX() {
     if (!items.length) return toast('Todavía no hay proveedores');
-    const cell = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-    const rows = [['Proveedor', 'País', 'Activos', 'Notas', 'Fotos'].map(cell).join(';'),
-      ...filtered().map(p => [p.name, p.country, (p.tags || []).join(', '), p.notes, (p.photos || []).length].map(cell).join(';'))];
-    download(`proveedores-${today()}.csv`, '﻿' + rows.join('\r\n'), 'text/csv;charset=utf-8');
-    toast('Planilla descargada');
+    toast('Armando el Excel…');
+    let ExcelJS;
+    try { ExcelJS = await loadExcel(); } catch { return toast('Se necesita internet para exportar'); }
+    const list = [...items].sort((a, b) => collator.compare(a.name, b.name));
+    const maxPhotos = Math.max(1, ...list.map(p => (p.photos || []).length));
+    const PX = 130;                                   // tamaño de cada foto en la planilla
+    const wb = new ExcelJS.Workbook(); wb.creator = 'Proveedores in-cosmetics';
+    const ws = wb.addWorksheet('Proveedores', { views: [{ state: 'frozen', ySplit: 1 }] });
+    const photoCols = Array.from({ length: maxPhotos }, (_, i) => ({ header: i ? `Foto ${i + 1}` : 'Foto', key: `f${i}`, width: 19 }));
+    ws.columns = [
+      photoCols[0],
+      { header: 'Proveedor', key: 'name', width: 26 },
+      { header: 'País', key: 'country', width: 16 },
+      { header: 'Activos que trabaja', key: 'tags', width: 34 },
+      { header: 'Notas', key: 'notes', width: 40 },
+      { header: 'Cant. fotos', key: 'n', width: 11 },
+      ...photoCols.slice(1),
+    ];
+    const head = ws.getRow(1);
+    head.height = 24;
+    head.eachCell(c => {
+      c.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF784A98' } };
+      c.alignment = { vertical: 'middle', horizontal: 'center' };
+    });
+    const extraStart = 6;                              // columna (0-based) donde empiezan Foto 2, Foto 3…
+    for (const [i, p] of list.entries()) {
+      const r = i + 2, photos = p.photos || [];
+      const row = ws.getRow(r);
+      row.values = { name: p.name, country: p.country || '', tags: (p.tags || []).join(', '), notes: p.notes || '', n: photos.length };
+      row.height = PX * .75 + 8;
+      row.eachCell({ includeEmpty: true }, c => { c.alignment = { vertical: 'middle', wrapText: true }; });
+      row.getCell('name').font = { bold: true };
+      for (const [j, src] of photos.entries()) {
+        const thumb = await squareThumb(src); if (!thumb) continue;
+        const id = wb.addImage({ base64: thumb, extension: 'jpeg' });
+        const col = j === 0 ? 0 : extraStart + j - 1;
+        ws.addImage(id, { tl: { col: col + .06, row: r - 1 + .04 }, ext: { width: PX, height: PX }, editAs: 'oneCell' });
+      }
+    }
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    await shareOrDownload(`proveedores-${today()}.xlsx`, blob);
+    toast('Excel listo');
   }
   async function importJSON(file) {
     try {
@@ -714,7 +785,7 @@
   menu.onclick = e => {
     const act = e.target.closest('[data-act]')?.dataset.act; if (!act) return;
     menu.classList.add('hidden');
-    ({ export: exportJSON, csv: exportCSV, import: () => $('#importFile').click() })[act]();
+    ({ export: exportJSON, xlsx: exportXLSX, import: () => $('#importFile').click() })[act]();
   };
   $('#importFile').onchange = e => { const f = e.target.files[0]; if (f) importJSON(f); e.target.value = ''; };
 
