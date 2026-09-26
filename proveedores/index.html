@@ -251,14 +251,14 @@
 </header>
 
 <div class="menu glass hidden" id="menu">
-  <button data-act="xlsx">Exportar a Excel (con fotos)
+  <button data-act="zip">Descargar todo (ZIP)
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="M4 7.5 12 12l8-4.5M12 12v9"/></svg></button>
+  <button data-act="xlsx">Solo Excel (con fotos)
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></button>
-  <button data-act="export">Descargar copia
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 10l5 5 5-5M5 21h14"/></svg></button>
   <button data-act="import">Restaurar copia
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5M5 21h14"/></svg></button>
 </div>
-<input type="file" id="importFile" accept="application/json,.json" hidden />
+<input type="file" id="importFile" accept=".zip,application/zip,application/json,.json" hidden />
 
 <main>
   <h1 class="large-title">Proveedores</h1>
@@ -350,18 +350,24 @@
 <script>
 (() => {
   // ---------- IndexedDB (misma base de siempre, los datos se conservan) ----------
-  const DB_NAME = 'inncosmetic-proveedores', STORE = 'proveedores';
+  // 'proveedores' guarda los datos y una copia liviana de cada foto para mostrar;
+  // 'fotos' guarda cada foto original, en resolución completa, tal como salió de la cámara.
+  const DB_NAME = 'inncosmetic-proveedores', STORE = 'proveedores', PHOTOS = 'fotos';
   const dbp = new Promise((res, rej) => {
-    const r = indexedDB.open(DB_NAME, 1);
-    r.onupgradeneeded = () => r.result.createObjectStore(STORE, { keyPath: 'id' });
+    const r = indexedDB.open(DB_NAME, 2);
+    r.onupgradeneeded = () => {
+      const db = r.result;
+      if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: 'id' });
+      if (!db.objectStoreNames.contains(PHOTOS)) db.createObjectStore(PHOTOS, { keyPath: 'id' });
+    };
     r.onsuccess = () => res(r.result);
     r.onerror = () => rej(r.error);
   });
-  async function run(mode, fn) {
+  async function run(mode, fn, store = STORE) {
     const db = await dbp;
     return new Promise((res, rej) => {
-      const t = db.transaction(STORE, mode);
-      const req = fn(t.objectStore(STORE));
+      const t = db.transaction(store, mode);
+      const req = fn(t.objectStore(store));
       t.oncomplete = () => res(req && req.result);
       t.onerror = () => rej(t.error);
       t.onabort = () => rej(t.error);
@@ -370,6 +376,9 @@
   const dbAll = () => run('readonly', s => s.getAll());
   const dbPut = item => run('readwrite', s => s.put(item));
   const dbDel = id => run('readwrite', s => s.delete(id));
+  const origPut = rec => run('readwrite', s => s.put(rec), PHOTOS);
+  const origGet = id => id ? run('readonly', s => s.get(id), PHOTOS) : Promise.resolve(null);
+  const origDel = ids => Promise.all(ids.filter(Boolean).map(id => run('readwrite', s => s.delete(id), PHOTOS).catch(() => {})));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 
   // ---------- Estado y utilidades ----------
@@ -408,12 +417,12 @@
   };
   const countryLabel = p => p.country ? [flagOf(p.country), p.country].filter(Boolean).join(' ') : '';
 
-  function toast(msg) {
+  function toast(msg, ms = 1900) {
     const t = $('#toast'); t.innerHTML = CHECK_ICON + esc(msg); t.classList.add('show');
-    clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 1900);
+    clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), ms);
   }
 
-  function compress(file, max = 1800, q = .84) {
+  function compress(file, max = 2048, q = .88) {
     return new Promise((res, rej) => {
       const url = URL.createObjectURL(file), img = new Image();
       img.onload = () => {
@@ -427,14 +436,21 @@
       img.src = url;
     });
   }
+  // Devuelve { srcs, origs }: la copia liviana para la app y el id de la foto original guardada.
   async function readPhotos(files) {
-    const out = [];
+    const srcs = [], origs = [];
     for (const f of files) {
       if (!f.type.startsWith('image/') && !/\.(heic|heif)$/i.test(f.name)) continue;
-      try { out.push(await compress(f)); } catch { toast('Una foto no se pudo leer'); }
+      let src;
+      try { src = await compress(f); } catch { toast('Una foto no se pudo leer'); continue; }
+      let orig = uid();
+      try { await origPut({ id: orig, blob: f, type: f.type || 'image/jpeg', name: f.name || '' }); } catch { orig = null; }
+      srcs.push(src); origs.push(orig);
     }
-    return out;
+    return { srcs, origs };
   }
+  // Ids de las fotos originales, alineados con p.photos (null = foto cargada antes de guardar originales).
+  const origsOf = p => (p.photos || []).map((_, i) => (p.originals || [])[i] || null);
 
   // ---------- Listado ----------
   function tagCounts() {
@@ -525,7 +541,7 @@
     const pk = e.target.closest('[data-pick]');
     if (pk) return pickPhotos('detail', pk.dataset.pick);
     const img = e.target.closest('img[data-i]');
-    if (img) { $('#lbImg').src = img.src; $('#lightbox').showModal(); }
+    if (img) openLightbox(img.src, origsOf(items.find(x => x.id === currentId) || {})[+img.dataset.i]);
   };
   // ---------- Cámara y fototeca ----------
   let pickTarget = 'form';
@@ -538,24 +554,26 @@
     else newWithPhotos(files);
   };
   async function newWithPhotos(files) {
-    const photos = await readPhotos(files); if (!photos.length) return;
-    openForm(); editing.photos = photos; renderPhotos();
+    const r = await readPhotos(files); if (!r.srcs.length) return;
+    openForm(); editing.photos = r.srcs; editing.originals = r.origs; pendingOrigs.push(...r.origs); renderPhotos();
     setTimeout(() => $('#f-name').focus(), 450);
   }
   async function addDetailPhotos(files) {
     const p = items.find(x => x.id === currentId); if (!p) return;
-    const added = await readPhotos(files); if (!added.length) return;
-    const next = { ...p, photos: [...(p.photos || []), ...added], updatedAt: Date.now() };
-    try { await dbPut(next); } catch { return toast('No hay espacio para guardar'); }
+    const r = await readPhotos(files), added = r.srcs; if (!added.length) return;
+    const next = { ...p, photos: [...(p.photos || []), ...added], originals: [...origsOf(p), ...r.origs], updatedAt: Date.now() };
+    try { await dbPut(next); } catch { origDel(r.origs); return toast('No hay espacio para guardar'); }
     items[items.indexOf(p)] = next; render(); openDetail(p.id);
     toast(added.length === 1 ? 'Foto agregada' : `${added.length} fotos agregadas`);
   }
 
   // ---------- Formulario ----------
+  let pendingOrigs = [], removedOrigs = [];   // originales agregados / quitados mientras se edita
   function openForm(p) {
     const isNew = !p;
     editing = structuredClone(p || { id: uid(), name: '', country: '', tags: [], notes: '', photos: [] });
-    editing.tags = editing.tags || []; editing.photos = editing.photos || [];
+    editing.tags = editing.tags || []; editing.photos = editing.photos || []; editing.originals = origsOf(editing);
+    pendingOrigs = []; removedOrigs = [];
     $('#formTitle').textContent = isNew ? 'Nuevo proveedor' : 'Editar';
     $('#deleteWrap').classList.toggle('hidden', isNew);
     $('#f-name').value = editing.name || '';
@@ -613,6 +631,7 @@
     const now = Date.now();
     editing.createdAt = editing.createdAt || now; editing.updatedAt = now;
     try { await dbPut(editing); } catch { return toast('No hay espacio para guardar'); }
+    origDel(removedOrigs); pendingOrigs = []; removedOrigs = [];
     const i = items.findIndex(x => x.id === editing.id);
     if (i >= 0) items[i] = editing; else items.push(editing);
     const id = editing.id, wasOpen = $('#detailSheet').open;
@@ -622,7 +641,8 @@
 
   async function addFormPhotos(files) {
     if (!files.length) return;
-    editing.photos.push(...await readPhotos(files)); renderPhotos();
+    const r = await readPhotos(files);
+    editing.photos.push(...r.srcs); editing.originals.push(...r.origs); pendingOrigs.push(...r.origs); renderPhotos();
   }
 
   // ---------- Copias ----------
@@ -633,30 +653,27 @@
     setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   }
   const today = () => new Date().toISOString().slice(0, 10);
-  function exportJSON() {
-    if (!items.length) return toast('Todavía no hay proveedores');
-    shareOrDownload(`proveedores-${today()}.json`, new Blob([JSON.stringify({ app: 'inncosmetic-proveedores', version: 4, exportedAt: new Date().toISOString(), items })], { type: 'application/json' }));
-    toast('Copia descargada');
-  }
   // Excel (.xlsx) con las fotos dentro de las celdas. ExcelJS se carga solo al exportar.
-  let excelLib = null;
-  function loadExcel() {
-    return excelLib || (excelLib = new Promise((res, rej) => {
+  const libs = {};
+  function loadLib(url, global) {
+    return libs[url] || (libs[url] = new Promise((res, rej) => {
       const sc = document.createElement('script');
-      sc.src = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
-      sc.onload = () => res(window.ExcelJS);
-      sc.onerror = () => { excelLib = null; rej(new Error('sin conexión')); };
+      sc.src = url;
+      sc.onload = () => res(window[global]);
+      sc.onerror = () => { delete libs[url]; sc.remove(); rej(new Error('sin conexión')); };
       document.head.appendChild(sc);
     }));
   }
-  function squareThumb(src, size = 360) {
+  const loadExcel = () => loadLib('https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js', 'ExcelJS');
+  const loadZip = () => loadLib('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js', 'JSZip');
+  function squareThumb(src, size = 600) {
     return new Promise(res => {
       const img = new Image();
       img.onload = () => {
         const c = document.createElement('canvas'); c.width = c.height = size;
         const k = Math.min(img.naturalWidth, img.naturalHeight);
         c.getContext('2d').drawImage(img, (img.naturalWidth - k) / 2, (img.naturalHeight - k) / 2, k, k, 0, 0, size, size);
-        res(c.toDataURL('image/jpeg', .82));
+        res(c.toDataURL('image/jpeg', .86));
       };
       img.onerror = () => res(null);
       img.src = src;
@@ -670,12 +687,16 @@
     }
     download(name, blob, blob.type);
   }
+  const sorted = () => [...items].sort((a, b) => collator.compare(a.name, b.name));
   async function exportXLSX() {
     if (!items.length) return toast('Todavía no hay proveedores');
-    toast('Armando el Excel…');
+    toast('Armando el Excel…', 60000);
     let ExcelJS;
     try { ExcelJS = await loadExcel(); } catch { return toast('Se necesita internet para exportar'); }
-    const list = [...items].sort((a, b) => collator.compare(a.name, b.name));
+    await shareOrDownload(`proveedores-${today()}.xlsx`, await buildXLSX(ExcelJS, sorted()));
+    toast('Excel listo');
+  }
+  async function buildXLSX(ExcelJS, list, folders) {
     const maxPhotos = Math.max(1, ...list.map(p => (p.photos || []).length));
     const PX = 130;                                   // tamaño de cada foto en la planilla
     const wb = new ExcelJS.Workbook(); wb.creator = 'Proveedores in-cosmetics';
@@ -688,6 +709,7 @@
       { header: 'Activos que trabaja', key: 'tags', width: 34 },
       { header: 'Notas', key: 'notes', width: 40 },
       { header: 'Cant. fotos', key: 'n', width: 11 },
+      ...(folders ? [{ header: 'Carpeta de fotos en el ZIP', key: 'folder', width: 30 }] : []),
       ...photoCols.slice(1),
     ];
     const head = ws.getRow(1);
@@ -697,11 +719,11 @@
       c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF784A98' } };
       c.alignment = { vertical: 'middle', horizontal: 'center' };
     });
-    const extraStart = 6;                              // columna (0-based) donde empiezan Foto 2, Foto 3…
+    const extraStart = folders ? 7 : 6;                // columna (0-based) donde empiezan Foto 2, Foto 3…
     for (const [i, p] of list.entries()) {
       const r = i + 2, photos = p.photos || [];
       const row = ws.getRow(r);
-      row.values = { name: p.name, country: p.country || '', tags: (p.tags || []).join(', '), notes: p.notes || '', n: photos.length };
+      row.values = { name: p.name, country: p.country || '', tags: (p.tags || []).join(', '), notes: p.notes || '', n: photos.length, ...(folders ? { folder: folders[i] } : {}) };
       row.height = PX * .75 + 8;
       row.eachCell({ includeEmpty: true }, c => { c.alignment = { vertical: 'middle', wrapText: true }; });
       row.getCell('name').font = { bold: true };
@@ -713,26 +735,83 @@
       }
     }
     const buf = await wb.xlsx.writeBuffer();
-    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    await shareOrDownload(`proveedores-${today()}.xlsx`, blob);
-    toast('Excel listo');
+    return new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   }
-  async function importJSON(file) {
+
+  // ZIP con todo: fotos originales en carpetas por proveedor, el Excel y los datos (sirve para restaurar).
+  const safeName = s => String(s || 'Sin nombre').replace(/[\\/:*?"<>|\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60) || 'Sin nombre';
+  const extOf = type => ({ 'image/png': 'png', 'image/heic': 'heic', 'image/heif': 'heif', 'image/webp': 'webp' }[type] || 'jpg');
+  const typeOf = path => ({ png: 'image/png', heic: 'image/heic', heif: 'image/heif', webp: 'image/webp' }[path.split('.').pop().toLowerCase()] || 'image/jpeg');
+  const dataUrlToBlob = u => fetch(u).then(r => r.blob());
+  async function exportZIP() {
+    if (!items.length) return toast('Todavía no hay proveedores');
+    toast('Preparando el ZIP…', 120000);
+    let JSZip, ExcelJS;
+    try { [JSZip, ExcelJS] = await Promise.all([loadZip(), loadExcel()]); } catch { return toast('Se necesita internet para exportar'); }
+    const list = sorted(), zip = new JSZip();
+    const folders = list.map((p, i) => `Fotos/${String(i + 1).padStart(2, '0')} - ${safeName(p.name)}`);
+    const total = list.reduce((n, p) => n + (p.photos || []).length, 0);
+    let done = 0;
+    const datos = [];
+    for (const [i, p] of list.entries()) {
+      const origs = origsOf(p), paths = [];
+      for (const [j, src] of (p.photos || []).entries()) {
+        const rec = await origGet(origs[j]).catch(() => null);
+        const blob = rec && rec.blob ? rec.blob : await dataUrlToBlob(src);
+        const path = `${folders[i]}/foto-${j + 1}.${extOf(rec ? rec.type : blob.type)}`;
+        zip.file(path, blob, { binary: true });
+        paths.push(path);
+        toast(`Preparando el ZIP… ${++done}/${total} fotos`, 120000);
+      }
+      zip.file(`${folders[i]}/datos.txt`, [
+        `Proveedor: ${p.name}`, `País: ${p.country || '-'}`, `Activos: ${(p.tags || []).join(', ') || '-'}`, '', 'Notas:', p.notes || '-',
+      ].join('\n'));
+      datos.push({ id: p.id, name: p.name, country: p.country || '', tags: p.tags || [], notes: p.notes || '', createdAt: p.createdAt, updatedAt: p.updatedAt, fotos: paths });
+    }
+    zip.file('Proveedores.xlsx', await buildXLSX(ExcelJS, list, folders.map(f => f + '/')));
+    zip.file('datos.json', JSON.stringify({ app: 'inncosmetic-proveedores', version: 5, exportedAt: new Date().toISOString(), items: datos }, null, 2));
+    const blob = await zip.generateAsync({ type: 'blob', compression: 'STORE', mimeType: 'application/zip' });
+    await shareOrDownload(`proveedores-in-cosmetics-${today()}.zip`, blob);
+    toast('ZIP listo');
+  }
+  async function importBackup(file) {
     try {
-      const data = JSON.parse(await file.text());
-      const list = Array.isArray(data) ? data : data.items;
+      let list, zip = null;
+      if (/\.zip$/i.test(file.name) || /zip/.test(file.type)) {
+        toast('Leyendo el ZIP…', 120000);
+        const JSZip = await loadZip().catch(() => { throw new Error('offline'); });
+        zip = await JSZip.loadAsync(file);
+        const json = zip.file('datos.json'); if (!json) throw 0;
+        list = JSON.parse(await json.async('string')).items;
+      } else {
+        const data = JSON.parse(await file.text());
+        list = Array.isArray(data) ? data : data.items;
+      }
       if (!Array.isArray(list)) throw 0;
       let n = 0;
       for (const p of list) {
         if (!p || typeof p.name !== 'string') continue;
-        const item = { tags: [], photos: [], notes: '', country: '', ...p, id: p.id || uid() };
+        if (zip) toast(`Restaurando… ${n + 1}/${list.length}`, 120000);
+        const { fotos, ...rest } = p;
+        const item = { tags: [], photos: [], notes: '', country: '', ...rest, id: p.id || uid() };
+        if (zip && Array.isArray(fotos)) {
+          const files = [];
+          for (const path of fotos) {
+            const f = zip.file(path); if (!f) continue;
+            files.push(new File([await f.async('arraybuffer')], path.split('/').pop(), { type: typeOf(path) }));
+          }
+          const old = items.find(x => x.id === item.id);
+          if (old) origDel(origsOf(old));
+          const r = await readPhotos(files);
+          item.photos = r.srcs; item.originals = r.origs;
+        }
         await dbPut(item);
         const i = items.findIndex(x => x.id === item.id);
         if (i >= 0) items[i] = item; else items.push(item);
         n++;
       }
       render(); toast(`${plural(n, 'proveedor restaurado', 'proveedores restaurados')}`);
-    } catch { toast('Ese archivo no es una copia válida'); }
+    } catch (err) { toast(err && err.message === 'offline' ? 'Se necesita internet para restaurar' : 'Ese archivo no es una copia válida'); }
   }
 
 
@@ -752,11 +831,11 @@
   menu.onclick = e => {
     const act = e.target.closest('[data-act]')?.dataset.act; if (!act) return;
     menu.classList.add('hidden');
-    ({ export: exportJSON, xlsx: exportXLSX, import: () => $('#importFile').click() })[act]();
+    ({ zip: exportZIP, xlsx: exportXLSX, import: () => $('#importFile').click() })[act]();
   };
-  $('#importFile').onchange = e => { const f = e.target.files[0]; if (f) importJSON(f); e.target.value = ''; };
+  $('#importFile').onchange = e => { const f = e.target.files[0]; if (f) importBackup(f); e.target.value = ''; };
 
-  $('#cancelBtn').onclick = () => $('#formSheet').close();
+  $('#cancelBtn').onclick = () => { origDel(pendingOrigs); pendingOrigs = []; removedOrigs = []; $('#formSheet').close(); };
   $('#formSheet').addEventListener('cancel', e => e.preventDefault());
   $('#saveBtn').onclick = save;
   $('#f-name').oninput = updateSave;
@@ -768,8 +847,11 @@
     const pk = e.target.closest('[data-pick]');
     if (pk) return pickPhotos('form', pk.dataset.pick);
     const rm = e.target.closest('[data-rm]'), cv = e.target.closest('[data-cover]');
-    if (rm) { editing.photos.splice(+rm.dataset.rm, 1); renderPhotos(); }
-    else if (cv) { const [p] = editing.photos.splice(+cv.dataset.cover, 1); editing.photos.unshift(p); renderPhotos(); }
+    if (rm) { editing.photos.splice(+rm.dataset.rm, 1); removedOrigs.push(...editing.originals.splice(+rm.dataset.rm, 1)); renderPhotos(); }
+    else if (cv) {
+      const k = +cv.dataset.cover;
+      editing.photos.unshift(...editing.photos.splice(k, 1)); editing.originals.unshift(...editing.originals.splice(k, 1)); renderPhotos();
+    }
   };
   const form = $('#form');
   form.addEventListener('dragover', e => { e.preventDefault(); $('#drop')?.classList.add('over'); });
@@ -792,12 +874,20 @@
   $('#deleteBtn').onclick = async () => {
     if (!confirm(`¿Eliminar “${editing.name}”? No se puede deshacer.`)) return;
     await dbDel(editing.id);
+    origDel([...editing.originals, ...removedOrigs]);
     items = items.filter(x => x.id !== editing.id);
     $('#formSheet').close(); $('#detailSheet').close(); render(); toast('Eliminado');
   };
 
   $('#closeDetail').onclick = () => $('#detailSheet').close();
   $('#editBtn').onclick = () => openForm(items.find(x => x.id === currentId));
+  let lbUrl = null;
+  async function openLightbox(src, origId) {
+    $('#lbImg').src = src; $('#lightbox').showModal();
+    const rec = await origGet(origId).catch(() => null);
+    if (rec && rec.blob && $('#lightbox').open) { lbUrl = URL.createObjectURL(rec.blob); $('#lbImg').src = lbUrl; }
+  }
+  $('#lightbox').addEventListener('close', () => { if (lbUrl) { URL.revokeObjectURL(lbUrl); lbUrl = null; } });
   $('#lbClose').onclick = () => $('#lightbox').close();
   $('#lightbox').onclick = e => { if (!e.target.closest('#lbClose')) $('#lightbox').close(); };
   for (const d of [$('#detailSheet')]) {
